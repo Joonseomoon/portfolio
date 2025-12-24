@@ -1,14 +1,25 @@
-import { useState } from 'react';
-import './App.css';
+import { Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import About from './pages/About';
 
-function App() {
+export default function App() {
     return (
-        <>
-            <div className="p-8 text-3xl font-bold bg-gray-100 rounded-xl">
-                If this is big and padded, Tailwind works.
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh',
+            }}
+        >
+            <Navbar />
+
+            <div style={{ flex: 1, overflow: 'auto' }}>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/about" element={<About />} />
+                </Routes>
             </div>
-        </>
+        </div>
     );
 }
-
-export default App;
