@@ -12,14 +12,13 @@ export default function Navbar() {
     const rightLinks = [{ to: '/contact', label: 'Contact' }];
 
     const itemClass = (to) =>
-        `text-lg transition-all duration-200 pb-1 border-b-2 ${
-            pathname === to
-                ? 'opacity-100 font-bold border-white'
-                : 'opacity-75 hover:opacity-90 border-transparent'
+        `text-sm tracking-wide transition-all duration-200 pb-1 border-b-2 ${pathname === to
+            ? 'opacity-100 font-semibold border-indigo-200 text-slate-100'
+            : 'opacity-70 hover:opacity-100 border-transparent text-slate-300'
         }`;
 
     return (
-        <nav className="bg-gradient-to-r text-black font-sans p-4 shadow-md">
+        <nav className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-slate-100 font-sans px-6 py-4 shadow-md shadow-black/30">
             <div className="flex items-center justify-between">
                 <ul className="flex items-center space-x-6">
                     {leftLinks.map(({ to, label }) => (
