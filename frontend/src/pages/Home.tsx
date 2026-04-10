@@ -1,5 +1,3 @@
-import React from "react";
-
 const Home = () => {
     return (
         <div className="flex-1 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-slate-100">
@@ -26,6 +24,5 @@ const Home = () => {
         </div>
     );
 };
-
 
 export default Home;

@@ -1,17 +1,22 @@
 import { Link, useLocation } from 'react-router-dom';
 
+interface NavLink {
+    to: string;
+    label: string;
+}
+
 export default function Navbar() {
     const { pathname } = useLocation();
-    const leftLinks = [
+    const leftLinks: NavLink[] = [
         { to: '/', label: 'Joonseo' },
         { to: '/about', label: 'About' },
         { to: '/portfolio', label: 'Portfolio' },
         { to: '/experience', label: 'Experience' },
         { to: '/resume', label: 'Resume' },
     ];
-    const rightLinks = [{ to: '/contact', label: 'Contact' }];
+    const rightLinks: NavLink[] = [{ to: '/contact', label: 'Contact' }];
 
-    const itemClass = (to) =>
+    const itemClass = (to: string) =>
         `text-sm tracking-wide transition-all duration-200 pb-1 border-b-2 ${pathname === to
             ? 'opacity-100 font-semibold border-indigo-200 text-slate-100'
             : 'opacity-70 hover:opacity-100 border-transparent text-slate-300'
