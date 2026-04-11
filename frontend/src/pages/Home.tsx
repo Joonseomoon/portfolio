@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Star {
     id: number;
@@ -24,6 +25,7 @@ function generateStars(count: number): Star[] {
 }
 
 const Home = () => {
+    const navigate = useNavigate();
     const stars = useMemo(() => generateStars(150), []);
 
     return (
@@ -153,6 +155,7 @@ const Home = () => {
                         style={{ animationDelay: '0.65s' }}
                     >
                         <button
+                            onClick={() => navigate('/portfolio')}
                             className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 cursor-pointer"
                             style={{
                                 color: '#e8eeff',
@@ -177,6 +180,7 @@ const Home = () => {
                         </button>
 
                         <button
+                            onClick={() => navigate('/contact')}
                             className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 cursor-pointer"
                             style={{
                                 color: '#03030f',
