@@ -5,7 +5,7 @@ import About from "./pages/About";
 
 export default function App() {
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#03030f" }}>
             <Navbar />
 
             {/* NECESSARY: display:flex so the routed page can stretch */}
