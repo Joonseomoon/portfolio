@@ -1,16 +1,16 @@
 # Joonseo Moon — Portfolio
 
-Personal portfolio site built with React + TypeScript on the frontend and Express + MongoDB on the backend.
+Personal portfolio site built with React + TypeScript (Vite) on the frontend and Supabase (PostgreSQL) as the database.
 
 ---
 
 ## Stack
 
-| Layer     | Technology                          |
-|-----------|-------------------------------------|
+| Layer     | Technology                           |
+|-----------|--------------------------------------|
 | Frontend  | React, TypeScript, Vite, Tailwind v4 |
-| Backend   | Node.js, Express, TypeScript        |
-| Database  | MongoDB (Mongoose)                  |
+| Database  | Supabase (PostgreSQL)                |
+| Storage   | Supabase Storage                     |
 
 ---
 
@@ -18,14 +18,13 @@ Personal portfolio site built with React + TypeScript on the frontend and Expres
 
 ```
 portfolio/
-├── frontend/          # Vite + React app (port 5173 in dev)
-│   └── src/
-│       ├── pages/     # One file per route
-│       ├── components/
-│       └── api.ts     # All fetch calls to the backend
-└── backend/           # Express API (port 1000)
-    ├── models/        # Mongoose schemas
-    └── routes/        # REST endpoints
+└── frontend/          # Vite + React app (port 5173 in dev)
+    └── src/
+        ├── pages/     # One file per route
+        ├── components/
+        ├── lib/
+        │   └── supabase.ts  # Supabase client instance
+        └── api.ts           # All Supabase query functions
 ```
 
 ---
@@ -33,92 +32,47 @@ portfolio/
 ## Running Locally
 
 ```bash
-# Backend
-cd backend && npm run dev
-
-# Frontend (separate terminal)
 cd frontend && npm run dev
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:1000` — no CORS config needed.
+Create `frontend/.env.local` with your Supabase credentials (see `.env.example`).
 
 ---
 
-## Backend API
+## Database (Supabase)
 
-Base URL (dev): `http://localhost:1000`
+All data is managed through the [Supabase Table Editor](https://supabase.com/dashboard) — no SQL or curl needed for day-to-day updates.
 
-### Experience — `/api/experience`
+### `experiences`
 
-| Method | Endpoint          | Description          |
-|--------|-------------------|----------------------|
-| GET    | `/api/experience` | Get all experiences (sorted by startDate descending) |
-| POST   | `/api/experience` | Create a new experience |
+| Column       | Type     | Required | Notes                              |
+|--------------|----------|----------|------------------------------------|
+| id           | uuid     | auto     | Primary key                        |
+| title        | text     | yes      | Job title                          |
+| company_name | text     | yes      |                                    |
+| start_date   | date     | yes      | Used to sort (most recent first)   |
+| timeframe    | text     | yes      | Display string e.g. "May – Aug 2024" |
+| location     | text     | yes      |                                    |
+| description  | text[]   | no       | Bullet points                      |
+| company_url  | text     | no       | Makes the card a clickable link    |
 
-**Schema**
+### `portfolio_items`
 
-```ts
-{
-  title:       string   // required — job title
-  companyName: string   // required
-  startDate:   Date     // required — used for sort order (most recent first)
-  timeframe:   string   // required — display string e.g. "May 2024 – Aug 2024"
-  location:    string   // required
-  description: string[] // bullet points
-  companyURL:  string   // optional — makes the card a clickable link
-}
-```
+| Column      | Type   | Required | Notes                    |
+|-------------|--------|----------|--------------------------|
+| id          | uuid   | auto     | Primary key              |
+| title       | text   | yes      |                          |
+| description | text   | yes      |                          |
+| image_url   | text   | yes      | Project screenshot URL   |
+| icon_urls   | text[] | no       | Tech stack icon URLs     |
 
-**Example POST body**
+### `skills`
 
-```json
-{
-  "title": "Software Engineer Intern",
-  "companyName": "Acme Corp",
-  "startDate": "2024-05-01",
-  "timeframe": "May 2024 – Aug 2024",
-  "location": "San Francisco, CA",
-  "description": [
-    "Built and shipped a full-stack feature used by 10k+ users",
-    "Reduced API response time by 40% through query optimization"
-  ],
-  "companyURL": "https://acme.com"
-}
-```
-
-### Portfolio — `/api/portfolio`
-
-| Method | Endpoint         | Description         |
-|--------|------------------|---------------------|
-| GET    | `/api/portfolio` | Get all projects    |
-| POST   | `/api/portfolio` | Create a new project |
-
-**Schema**
-
-```ts
-{
-  title:       string   // required
-  description: string   // required
-  imageURLs:   string   // required — URL to project screenshot/image
-  iconURL:     string[] // tech stack icons
-}
-```
-
-### Skills — `/api/skills`
-
-| Method | Endpoint      | Description      |
-|--------|---------------|------------------|
-| GET    | `/api/skills` | Get all skills   |
-| POST   | `/api/skills` | Create a skill   |
-
-**Schema**
-
-```ts
-{
-  title:   string  // required — e.g. "TypeScript"
-  iconURL: string  // required — URL to skill icon
-}
-```
+| Column   | Type | Required | Notes           |
+|----------|------|----------|-----------------|
+| id       | uuid | auto     | Primary key     |
+| title    | text | yes      | e.g. TypeScript |
+| icon_url | text | yes      | Icon image URL  |
 
 ---
 
@@ -154,10 +108,11 @@ Custom keyframes in `frontend/src/index.css`: `twinkle`, `moonFloat`, `fadeSlide
 
 ## Future Development Notes
 
-- **Admin UI** — no admin page exists yet. Content is added via `curl` or MongoDB Compass directly. Priority task before the site goes live.
-- **Authentication** — admin routes need to be protected before deploying. Consider a simple JWT or session-based auth since this is a single-user site.
-- **Skills page** — the backend model and route exist; the frontend page does not. Skills are likely best shown on the About page.
-- **Portfolio page** — backend model and route exist; frontend page not started. Intended to be a card grid.
+- **Admin UI** — no admin page exists yet. Content is managed directly via the Supabase Table Editor. A custom admin UI is a future priority.
+- **Authentication** — if an admin UI is built, protect it with Supabase Auth.
+- **Skills page** — table exists in Supabase; the frontend page does not. Skills are likely best shown on the About page.
+- **Portfolio page** — table exists in Supabase; frontend page not started. Intended to be a card grid.
 - **Resume page** — likely a PDF embed or download link. No backend model needed.
 - **Contact page** — will need a third-party email service (e.g. Resend, EmailJS) since the backend has no email model.
-- **Deployment** — frontend can be deployed to Vercel/Netlify; backend to Render/Railway. Update the Vite proxy target from `localhost:1000` to the deployed backend URL via an environment variable.
+- **Deployment** — frontend can be deployed to Vercel/Netlify. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in the hosting dashboard. No separate backend to deploy.
+- **Server-side logic** (e.g. contact form emails) — use Supabase Edge Functions rather than spinning up a new Express server.

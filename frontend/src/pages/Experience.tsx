@@ -44,13 +44,13 @@ function TimelineCard({ experience, side }: CardProps) {
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
             }}
-            onMouseEnter={experience.companyURL ? (e) => {
+            onMouseEnter={experience.company_url ? (e) => {
                 const el = e.currentTarget as HTMLDivElement;
                 el.style.background = 'rgba(200,216,255,0.08)';
                 el.style.borderColor = 'rgba(200,216,255,0.22)';
                 el.style.boxShadow = '0 0 32px rgba(200,216,255,0.07)';
             } : undefined}
-            onMouseLeave={experience.companyURL ? (e) => {
+            onMouseLeave={experience.company_url ? (e) => {
                 const el = e.currentTarget as HTMLDivElement;
                 el.style.background = 'rgba(200,216,255,0.04)';
                 el.style.borderColor = 'rgba(200,216,255,0.1)';
@@ -78,7 +78,7 @@ function TimelineCard({ experience, side }: CardProps) {
                         className="text-sm font-medium mb-3"
                         style={{ color: '#8898b8' }}
                     >
-                        {experience.companyName}
+                        {experience.company_name}
                         {experience.location && (
                             <span style={{ color: '#4f607a' }}> · {experience.location}</span>
                         )}
@@ -128,9 +128,9 @@ function TimelineCard({ experience, side }: CardProps) {
                 gridColumn: side === 'left' ? '1' : '3',
             }}
         >
-            {experience.companyURL ? (
+            {experience.company_url ? (
                 <a
-                    href={experience.companyURL}
+                    href={experience.company_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block group"
@@ -319,7 +319,7 @@ export default function Experience() {
                         />
 
                         {experiences.map((exp, i) => (
-                            <TimelineRow key={exp._id} experience={exp} index={i} />
+                            <TimelineRow key={exp.id} experience={exp} index={i} />
                         ))}
                     </div>
                 )}
