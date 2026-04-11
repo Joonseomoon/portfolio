@@ -4,7 +4,7 @@ import { fetchExperiences, IExperience } from '../api';
 // ---------------------------------------------------------------------------
 // Scroll-reveal hook — fires once when the element enters the viewport
 // ---------------------------------------------------------------------------
-function useInView(threshold = 0.18) {
+function useInView(threshold = 0.05) {
     const ref = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
 
@@ -28,11 +28,10 @@ function useInView(threshold = 0.18) {
 interface CardProps {
     experience: IExperience;
     side: 'left' | 'right';
+    inView: boolean;
 }
 
-function TimelineCard({ experience, side }: CardProps) {
-    const { ref, inView } = useInView();
-
+function TimelineCard({ experience, side, inView }: CardProps) {
     const translateFrom = side === 'left' ? '-40px' : '40px';
 
     const cardContent = (
@@ -120,11 +119,10 @@ function TimelineCard({ experience, side }: CardProps) {
 
     return (
         <div
-            ref={ref}
             style={{
                 opacity: inView ? 1 : 0,
                 transform: inView ? 'translateX(0)' : `translateX(${translateFrom})`,
-                transition: 'opacity 0.6s ease, transform 0.6s ease',
+                transition: 'opacity 0.4s ease, transform 0.4s ease',
                 gridColumn: side === 'left' ? '1' : '3',
             }}
         >
@@ -182,7 +180,7 @@ interface RowProps {
 
 function TimelineRow({ experience, index }: RowProps) {
     const side = index % 2 === 0 ? 'left' : 'right';
-    const { ref, inView } = useInView(0.15);
+    const { ref, inView } = useInView(0.05);
 
     return (
         <div
@@ -196,7 +194,7 @@ function TimelineRow({ experience, index }: RowProps) {
         >
             {/* Left slot */}
             {side === 'left' ? (
-                <TimelineCard experience={experience} side="left" />
+                <TimelineCard experience={experience} side="left" inView={inView} />
             ) : (
                 <div />
             )}
@@ -206,10 +204,31 @@ function TimelineRow({ experience, index }: RowProps) {
 
             {/* Right slot */}
             {side === 'right' ? (
-                <TimelineCard experience={experience} side="right" />
+                <TimelineCard experience={experience} side="right" inView={inView} />
             ) : (
                 <div />
             )}
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton card shown while data loads
+// ---------------------------------------------------------------------------
+function SkeletonCard() {
+    return (
+        <div
+            className="rounded-2xl p-5"
+            style={{
+                background: 'rgba(200,216,255,0.03)',
+                border: '1px solid rgba(200,216,255,0.07)',
+            }}
+        >
+            <div className="rounded mb-3" style={{ height: '10px', width: '30%', background: 'rgba(200,216,255,0.08)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div className="rounded mb-2" style={{ height: '16px', width: '60%', background: 'rgba(200,216,255,0.1)', animation: 'pulse 1.5s ease-in-out 0.1s infinite' }} />
+            <div className="rounded mb-4" style={{ height: '12px', width: '40%', background: 'rgba(200,216,255,0.07)', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
+            <div className="rounded mb-2" style={{ height: '10px', width: '90%', background: 'rgba(200,216,255,0.06)', animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
+            <div className="rounded" style={{ height: '10px', width: '75%', background: 'rgba(200,216,255,0.06)', animation: 'pulse 1.5s ease-in-out 0.4s infinite' }} />
         </div>
     );
 }
@@ -277,16 +296,34 @@ export default function Experience() {
                     />
                 </div>
 
-                {/* Loading */}
+                {/* Skeleton loader */}
                 {loading && (
-                    <div className="flex justify-center py-24">
+                    <div className="relative">
                         <div
-                            className="w-8 h-8 rounded-full border-2 animate-spin"
+                            className="absolute top-0 bottom-0 pointer-events-none"
                             style={{
-                                borderColor: 'rgba(200,216,255,0.15)',
-                                borderTopColor: '#c8d8ff',
+                                left: 'calc(50% - 1px)',
+                                width: '2px',
+                                background: 'linear-gradient(to bottom, transparent, rgba(200,216,255,0.08) 8%, rgba(200,216,255,0.08) 92%, transparent)',
                             }}
                         />
+                        {[0, 1, 2].map((i) => (
+                            <div
+                                key={i}
+                                className="grid items-start"
+                                style={{ gridTemplateColumns: '1fr 40px 1fr', gap: '0 20px', marginBottom: '48px' }}
+                            >
+                                {i % 2 === 0 ? (
+                                    <SkeletonCard />
+                                ) : <div />}
+                                <div className="col-start-2 flex justify-center" style={{ paddingTop: '24px' }}>
+                                    <div className="rounded-full" style={{ width: '13px', height: '13px', background: 'rgba(200,216,255,0.1)', border: '2px solid rgba(200,216,255,0.15)' }} />
+                                </div>
+                                {i % 2 !== 0 ? (
+                                    <SkeletonCard />
+                                ) : <div />}
+                            </div>
+                        ))}
                     </div>
                 )}
 

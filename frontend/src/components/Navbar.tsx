@@ -13,7 +13,6 @@ export default function Navbar() {
         { to: '/about', label: 'About' },
         { to: '/portfolio', label: 'Portfolio' },
         { to: '/experience', label: 'Experience' },
-        { to: '/resume', label: 'Resume' },
     ];
     const rightLinks: NavLink[] = [{ to: '/contact', label: 'Contact' }];
 
@@ -46,6 +45,16 @@ export default function Navbar() {
                 </ul>
 
                 <ul className="flex items-center space-x-6">
+                    <li>
+                        <a
+                            href="https://afnodznejysfclenphzg.supabase.co/storage/v1/object/public/Resume/JoonseoMoon.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm tracking-wide transition-all duration-200 pb-1 border-b opacity-50 hover:opacity-90 border-transparent text-[#c8d8ff]"
+                        >
+                            Resume
+                        </a>
+                    </li>
                     {rightLinks.map(({ to, label }) => (
                         <li key={to}>
                             <Link to={to} className={itemClass(to)}>

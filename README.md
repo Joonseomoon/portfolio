@@ -84,7 +84,7 @@ All data is managed through the [Supabase Table Editor](https://supabase.com/das
 | `/experience`| `src/pages/Experience.tsx`| Done        |
 | `/about`     | `src/pages/About.tsx`     | Stub        |
 | `/portfolio` | —                         | Not started |
-| `/resume`    | —                         | Not started |
+| `/resume`    | —                         | External link (Supabase Storage) |
 | `/contact`   | —                         | Not started |
 
 ---
