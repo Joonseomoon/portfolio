@@ -17,6 +17,8 @@ export interface IPortfolioItem {
     description: string;
     image_url: string;
     icon_urls: string[];
+    featured: boolean;
+    created_at: string;
 }
 
 export interface ISkill {
@@ -38,7 +40,8 @@ export async function fetchExperiences(): Promise<IExperience[]> {
 export async function fetchPortfolioItems(): Promise<IPortfolioItem[]> {
     const { data, error } = await supabase
         .from('portfolio_items')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
     return data as IPortfolioItem[];
