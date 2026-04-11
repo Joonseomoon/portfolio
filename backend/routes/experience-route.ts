@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', async (_req: Request, res: Response) => {
     try {
-        const exp = await Experience.find();
+        const exp = await Experience.find().sort({ startDate: -1 });
         res.json(exp);
     } catch (err) {
         res.status(500).json({ error: (err as Error).message });
