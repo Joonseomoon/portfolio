@@ -25,6 +25,7 @@ export interface ISkill {
     id: string;
     title: string;
     icon_url: string;
+    category: string | null;
 }
 
 export async function fetchExperiences(): Promise<IExperience[]> {

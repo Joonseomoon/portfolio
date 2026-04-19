@@ -20,7 +20,7 @@ function useInView(threshold = 0.05) {
 }
 
 // ---------------------------------------------------------------------------
-// Skill card
+// Skill chip
 // ---------------------------------------------------------------------------
 function SkillCard({ skill, delay }: { skill: ISkill; delay: number }) {
     const { ref, inView } = useInView();
@@ -66,57 +66,35 @@ function SkillCard({ skill, delay }: { skill: ISkill; delay: number }) {
     );
 }
 
-// ---------------------------------------------------------------------------
-// Skeleton skill card
-// ---------------------------------------------------------------------------
 function SkeletonSkillCard() {
     return (
         <div
             className="flex flex-col items-center gap-2.5 p-4 rounded-2xl"
             style={{ background: 'rgba(200,216,255,0.03)', border: '1px solid rgba(200,216,255,0.06)' }}
         >
-            <div
-                className="rounded-lg w-9 h-9"
-                style={{ background: 'rgba(200,216,255,0.08)', animation: 'pulse 1.5s ease-in-out infinite' }}
-            />
-            <div
-                className="rounded w-12 h-3"
-                style={{ background: 'rgba(200,216,255,0.06)', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }}
-            />
+            <div className="rounded-lg w-9 h-9" style={{ background: 'rgba(200,216,255,0.08)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div className="rounded w-12 h-3" style={{ background: 'rgba(200,216,255,0.06)', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
         </div>
     );
 }
 
 // ---------------------------------------------------------------------------
-// Page header (reused pattern from Experience)
+// Category section
 // ---------------------------------------------------------------------------
-function PageHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
+function SkillCategory({ label, skills, startDelay }: { label: string; skills: ISkill[]; startDelay: number }) {
     return (
-        <div className="mb-14 text-center">
-            <p
-                className="text-xs font-semibold tracking-[0.35em] uppercase mb-3"
-                style={{ color: '#6b7fa3' }}
-            >
-                {eyebrow}
-            </p>
-            <h1
-                className="text-4xl sm:text-5xl font-bold"
-                style={{
-                    background: 'linear-gradient(135deg, #e8eeff 0%, #c8d8ff 45%, #a5b4fc 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    filter: 'drop-shadow(0 0 18px rgba(165,180,252,0.3))',
-                }}
-            >
-                {title}
-            </h1>
-            <div
-                className="mx-auto mt-5 h-px w-16"
-                style={{
-                    background: 'linear-gradient(to right, transparent, rgba(200,216,255,0.4), transparent)',
-                }}
-            />
+        <div className="mb-10">
+            <div className="flex items-center gap-4 mb-5">
+                <p className="text-xs font-semibold tracking-[0.3em] uppercase whitespace-nowrap" style={{ color: '#6b7fa3' }}>
+                    {label}
+                </p>
+                <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(200,216,255,0.12), transparent)' }} />
+            </div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))' }}>
+                {skills.map((skill, i) => (
+                    <SkillCard key={skill.id} skill={skill} delay={startDelay + i * 40} />
+                ))}
+            </div>
         </div>
     );
 }
@@ -124,6 +102,8 @@ function PageHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
+const CATEGORY_ORDER = ['Languages', 'Frameworks', 'Developer Tools', 'Libraries'];
+
 export default function About() {
     const [skills, setSkills] = useState<ISkill[]>([]);
     const [loading, setLoading] = useState(true);
@@ -135,6 +115,20 @@ export default function About() {
             .catch((err: Error) => setError(err.message))
             .finally(() => setLoading(false));
     }, []);
+
+    const grouped = skills.reduce<Record<string, ISkill[]>>((acc, skill) => {
+        const cat = skill.category ?? 'Other';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(skill);
+        return acc;
+    }, {});
+
+    const orderedCategories = [
+        ...CATEGORY_ORDER.filter((c) => grouped[c]),
+        ...Object.keys(grouped).filter((c) => !CATEGORY_ORDER.includes(c)),
+    ];
+
+    let delayCounter = 0;
 
     return (
         <div className="flex-1 overflow-y-auto" style={{ background: '#03030f' }}>
@@ -149,7 +143,29 @@ export default function About() {
             />
 
             <div className="relative z-10 mx-auto max-w-3xl px-6 py-16">
-                <PageHeader eyebrow="Who I am" title="About" />
+
+                {/* Page header */}
+                <div className="mb-14 text-center">
+                    <p className="text-xs font-semibold tracking-[0.35em] uppercase mb-3" style={{ color: '#6b7fa3' }}>
+                        Who I am
+                    </p>
+                    <h1
+                        className="text-4xl sm:text-5xl font-bold"
+                        style={{
+                            background: 'linear-gradient(135deg, #e8eeff 0%, #c8d8ff 45%, #a5b4fc 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            filter: 'drop-shadow(0 0 18px rgba(165,180,252,0.3))',
+                        }}
+                    >
+                        About
+                    </h1>
+                    <div
+                        className="mx-auto mt-5 h-px w-16"
+                        style={{ background: 'linear-gradient(to right, transparent, rgba(200,216,255,0.4), transparent)' }}
+                    />
+                </div>
 
                 {/* Bio */}
                 <div
@@ -160,31 +176,26 @@ export default function About() {
                     }}
                 >
                     <p className="text-base leading-relaxed mb-4" style={{ color: '#8898b8' }}>
-                        Hi, I'm <span style={{ color: '#c8d8ff' }}>Joonseo Moon</span> — a full stack
+                        Hi, I'm <span style={{ color: '#c8d8ff' }}>Joonseo Moon</span> — a full-stack
                         developer with a passion for building clean, thoughtful software. I enjoy working
                         across the entire stack, from designing intuitive user interfaces to architecting
                         reliable backend systems.
                     </p>
                     <p className="text-base leading-relaxed" style={{ color: '#8898b8' }}>
-                        When I'm not coding, you'll find me{' '}
-                        <span style={{ color: '#c8d8ff' }}>[placeholder — add your own details here]</span>.
-                        I'm always looking for new challenges and opportunities to grow.
+                        I'm currently a Software Engineer at{' '}
+                        <span style={{ color: '#c8d8ff' }}>Hack4Impact BU</span>, building web applications
+                        for nonprofits. I'm always looking for new challenges and opportunities to grow as
+                        an engineer.
                     </p>
                 </div>
 
                 {/* Skills */}
                 <div>
-                    <div className="flex items-center gap-4 mb-8">
-                        <p
-                            className="text-xs font-semibold tracking-[0.35em] uppercase"
-                            style={{ color: '#6b7fa3' }}
-                        >
-                            Skills
+                    <div className="flex items-center gap-4 mb-10">
+                        <p className="text-xs font-semibold tracking-[0.35em] uppercase" style={{ color: '#6b7fa3' }}>
+                            Technical Skills
                         </p>
-                        <div
-                            className="flex-1 h-px"
-                            style={{ background: 'linear-gradient(to right, rgba(200,216,255,0.15), transparent)' }}
-                        />
+                        <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(200,216,255,0.15), transparent)' }} />
                     </div>
 
                     {error && (
@@ -193,27 +204,29 @@ export default function About() {
                         </p>
                     )}
 
-                    <div
-                        className="grid gap-3"
-                        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))' }}
-                    >
-                        {loading
-                            ? Array.from({ length: 12 }, (_, i) => <SkeletonSkillCard key={i} />)
-                            : skills.map((skill, i) => (
-                                <SkillCard
-                                    key={skill.id}
-                                    skill={skill}
-                                    delay={i * 40}
-                                />
-                            ))
-                        }
-                    </div>
+                    {loading && (
+                        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))' }}>
+                            {Array.from({ length: 16 }, (_, i) => <SkeletonSkillCard key={i} />)}
+                        </div>
+                    )}
 
                     {!loading && !error && skills.length === 0 && (
-                        <p className="text-sm text-center mt-4" style={{ color: '#4f607a' }}>
-                            No skills found.
-                        </p>
+                        <p className="text-sm text-center mt-4" style={{ color: '#4f607a' }}>No skills found.</p>
                     )}
+
+                    {!loading && !error && orderedCategories.map((cat) => {
+                        const catSkills = grouped[cat];
+                        const start = delayCounter;
+                        delayCounter += catSkills.length * 40;
+                        return (
+                            <SkillCategory
+                                key={cat}
+                                label={cat}
+                                skills={catSkills}
+                                startDelay={start}
+                            />
+                        );
+                    })}
                 </div>
             </div>
         </div>

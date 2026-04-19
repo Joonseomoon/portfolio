@@ -17,10 +17,9 @@ export default function Navbar() {
     const rightLinks: NavLink[] = [{ to: '/contact', label: 'Contact' }];
 
     const itemClass = (to: string) =>
-        `text-sm tracking-wide transition-all duration-200 pb-1 border-b ${
-            pathname === to
-                ? 'font-semibold border-[#c8d8ff] text-[#e8eeff]'
-                : 'opacity-50 hover:opacity-90 border-transparent text-[#c8d8ff]'
+        `text-sm tracking-wide transition-all duration-200 pb-1 border-b ${pathname === to
+            ? 'font-semibold border-[#c8d8ff] text-[#e8eeff]'
+            : 'opacity-50 hover:opacity-90 border-transparent text-[#c8d8ff]'
         }`;
 
     return (
@@ -47,7 +46,7 @@ export default function Navbar() {
                 <ul className="flex items-center space-x-6">
                     <li>
                         <a
-                            href="https://afnodznejysfclenphzg.supabase.co/storage/v1/object/public/Resume/JoonseoMoon.pdf"
+                            href="https://afnodznejysfclenphzg.supabase.co/storage/v1/object/public/Resume/RESUME.pdf"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm tracking-wide transition-all duration-200 pb-1 border-b opacity-50 hover:opacity-90 border-transparent text-[#c8d8ff]"
