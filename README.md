@@ -108,11 +108,12 @@ All data is managed through the [Supabase Table Editor](https://supabase.com/das
 
 ### `skills`
 
-| Column   | Type | Required | Notes            |
-|----------|------|----------|------------------|
-| id       | uuid | auto     | Primary key      |
-| title    | text | yes      | e.g. TypeScript  |
-| icon_url | text | yes      | Icon image URL   |
+| Column   | Type | Required | Notes                                          |
+|----------|------|----------|------------------------------------------------|
+| id       | uuid | auto     | Primary key                                    |
+| title    | text | yes      | e.g. TypeScript                                |
+| icon_url | text | yes      | Icon image URL                                 |
+| category | text | no       | Groups skills on About page (Languages, etc.)  |
 
 ---
 
@@ -161,3 +162,13 @@ Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set as GitHub reposito
 - **Admin UI** — content is managed via the Supabase Table Editor. A protected `/admin` page built with Supabase Auth is a future priority.
 - **Custom email domain** — verify a domain in Resend to send contact emails from a personal address instead of `onboarding@resend.dev`.
 - **Deployment** — frontend deploys to Vercel/Netlify. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in the hosting dashboard. No separate backend to deploy.
+
+---
+
+## TODO
+
+- **Portfolio item links** — add a `project_url` (and optionally `github_url`) column to `portfolio_items`. Update the Portfolio page so each card links out to the live site or GitHub repo. Both URLs should be stored in Supabase and rendered as icon buttons (e.g. globe + GitHub mark) on the card.
+
+- **Experience company logos** — add a `logo_url` column to the `experiences` table. Replace the animated dot on the centre timeline node with a circular company logo image (white background, `rounded-full`, `object-contain`). Falls back to the current dot if no logo is provided. Upload logos to Supabase Storage.
+
+- **Portfolio images** — take a screenshot of each project's frontend UI, upload to a `portfolio-images` Supabase Storage bucket, and paste the public URL as `image_url` when adding the row to `portfolio_items`.
