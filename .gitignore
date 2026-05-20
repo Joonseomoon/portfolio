@@ -7,3 +7,7 @@
 # Logs
 *.log
 npm-debug.log*
+
+CLAUDE.md
+.agents
+skills-lock.json

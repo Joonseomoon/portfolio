@@ -8,7 +8,7 @@ import Contact from "./pages/Contact";
 
 export default function App() {
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#03030f" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#F7F5F0" }}>
             <Navbar />
 
             {/* NECESSARY: display:flex so the routed page can stretch */}
