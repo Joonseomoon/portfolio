@@ -104,9 +104,9 @@ const stats = [
     { value: 'BU', label: 'Computer Engineering' },
 ];
 
-function PortraitColumn() {
+function PortraitColumn({ className = '' }: { className?: string }) {
     return (
-        <FadeUp delay={0.1} className="flex-shrink-0 flex flex-col gap-6">
+        <FadeUp delay={0.1} className={`flex-shrink-0 flex flex-col gap-6 ${className}`}>
             {/* Portrait frame */}
             <div
                 style={{
@@ -329,6 +329,31 @@ export default function About() {
                                     style={{ background: 'rgba(28,25,23,0.12)' }}
                                 />
 
+                                {/* Portrait — mobile only, between divider and bio */}
+                                <motion.div variants={itemVariants} className="sm:hidden mb-7">
+                                    <div style={{
+                                        width: '100%', maxWidth: 260, height: 300,
+                                        border: '1px solid rgba(28,25,23,0.2)',
+                                        boxShadow: '6px 6px 0px rgba(28,25,23,0.07)',
+                                        overflow: 'hidden', marginBottom: 16,
+                                    }}>
+                                        <img
+                                            src="/profile.jpg"
+                                            alt="Joonseo Moon"
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+                                            draggable={false}
+                                        />
+                                    </div>
+                                    <div className="flex items-start gap-6">
+                                        {stats.map(({ value, label }) => (
+                                            <div key={label} className="flex flex-col gap-0.5">
+                                                <span style={{ fontFamily: '"DM Serif Display", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: '#1C1917', lineHeight: 1 }}>{value}</span>
+                                                <span style={{ fontSize: '11px', letterSpacing: '0.04em', color: '#A8A29E' }}>{label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+
                                 <motion.div variants={itemVariants}>
                                     <p className="text-sm leading-[1.75] mb-3" style={{ color: '#57534E' }}>
                                         Hi, I'm{' '}
@@ -359,8 +384,8 @@ export default function About() {
                                 </motion.div>
                             </div>
 
-                            {/* Right column: portrait + stats */}
-                            <PortraitColumn />
+                            {/* Right column: portrait + stats — desktop only */}
+                            <PortraitColumn className="hidden sm:flex" />
                         </motion.div>
                     </section>
 

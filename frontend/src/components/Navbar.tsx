@@ -91,13 +91,15 @@ export default function Navbar() {
                             ))}
                         </ul>
 
-                        {/* Mobile: Contact + hamburger */}
-                        <Link
-                            to="/contact"
-                            className={`sm:hidden text-sm transition-colors duration-200 ${pathname === '/contact' ? 'font-semibold text-[#1C1917]' : 'text-[#78716C]'}`}
+                        {/* Mobile: Resume + hamburger */}
+                        <a
+                            href={RESUME_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="sm:hidden text-sm transition-colors duration-200 text-[#78716C] hover:text-[#1C1917]"
                         >
-                            Contact
-                        </Link>
+                            Resume
+                        </a>
                         <button
                             className="sm:hidden flex items-center justify-center cursor-pointer"
                             style={{ color: '#78716C', background: 'none', border: 'none', padding: 2 }}
@@ -136,17 +138,6 @@ export default function Navbar() {
                                     </Link>
                                 </li>
                             ))}
-                            <li>
-                                <a
-                                    href={RESUME_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block text-base text-[#78716C] transition-colors duration-200 py-0.5"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    Resume
-                                </a>
-                            </li>
                         </ul>
                     </motion.div>
                 )}

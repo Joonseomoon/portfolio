@@ -71,8 +71,8 @@ const Home = () => {
                     style={{
                         top: '-8%',
                         right: '-8%',
-                        width: '500px',
-                        height: '500px',
+                        width: 'clamp(260px, 44vw, 500px)',
+                        height: 'clamp(260px, 44vw, 500px)',
                         filter: 'grayscale(1) sepia(0.25) brightness(1.08) contrast(0.88)',
                     }}
                     variants={moonVariants}
