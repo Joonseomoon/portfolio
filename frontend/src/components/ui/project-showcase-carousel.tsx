@@ -23,7 +23,12 @@ function useOutsideClick(ref: React.RefObject<HTMLDivElement | null>, cb: () => 
 }
 
 // ── Card dimensions ───────────────────────────────────────────────────────────
-const CARD_W = 500;
+const CARD_W_MAX = 500;
+const CARD_W_MIN = 260;
+function getCardW() {
+    if (typeof window === "undefined") return CARD_W_MAX;
+    return Math.max(CARD_W_MIN, Math.min(CARD_W_MAX, window.innerWidth * 0.78));
+}
 
 // ── Animation timing ─────────────────────────────────────────────────────────
 const IMG_TRANSITION_S = 0.45;
@@ -209,7 +214,7 @@ function ExpandedPanel({ item, onClose }: { item: IPortfolioItem; onClose: () =>
 }
 
 // ── Individual parchment card ─────────────────────────────────────────────────
-function ProjectCard({ item, index }: { item: IPortfolioItem; index: number }) {
+function ProjectCard({ item, index, cardW }: { item: IPortfolioItem; index: number; cardW: number }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const tilt = TILTS[index % TILTS.length];
     const accent = ACCENTS[index % ACCENTS.length];
@@ -247,7 +252,7 @@ function ProjectCard({ item, index }: { item: IPortfolioItem; index: number }) {
                 {/* Parchment card body */}
                 <div
                     style={{
-                        width: CARD_W,
+                        width: cardW,
                         display: "flex",
                         flexDirection: "column",
                         background: "linear-gradient(148deg, #f6f2eb 0%, #ede8de 55%, #f1ece2 100%)",
@@ -388,6 +393,13 @@ export function ProjectShowcaseCarousel({ items }: { items: IPortfolioItem[] }) 
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(true);
+    const [cardW, setCardW] = useState(getCardW);
+
+    useEffect(() => {
+        const onResize = () => setCardW(getCardW());
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
 
     const checkScroll = useCallback(() => {
         const el = scrollRef.current;
@@ -433,7 +445,7 @@ export function ProjectShowcaseCarousel({ items }: { items: IPortfolioItem[] }) 
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] } }}
                     >
-                        <ProjectCard item={item} index={i} />
+                        <ProjectCard item={item} index={i} cardW={cardW} />
                     </motion.div>
                 ))}
             </div>
@@ -455,7 +467,7 @@ export function ProjectShowcaseCarousel({ items }: { items: IPortfolioItem[] }) 
             {/* Arrows — float just above the gradient */}
             <div style={{ position: "relative", zIndex: 2, display: "flex", justifyContent: "flex-end", gap: 8, paddingRight: "max(5vw, 32px)", marginTop: -28 }}>
                 <button
-                    onClick={() => scrollBy(-(CARD_W + 36))}
+                    onClick={() => scrollBy(-(cardW + 36))}
                     disabled={!canLeft}
                     className="flex items-center justify-center cursor-pointer disabled:opacity-25 transition-opacity"
                     style={{
@@ -471,7 +483,7 @@ export function ProjectShowcaseCarousel({ items }: { items: IPortfolioItem[] }) 
                     <ArrowLeft size={14} />
                 </button>
                 <button
-                    onClick={() => scrollBy(CARD_W + 36)}
+                    onClick={() => scrollBy(cardW + 36)}
                     disabled={!canRight}
                     className="flex items-center justify-center cursor-pointer disabled:opacity-25 transition-opacity"
                     style={{
