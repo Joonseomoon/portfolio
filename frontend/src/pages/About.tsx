@@ -332,13 +332,14 @@ export default function About() {
                                 <motion.div variants={itemVariants}>
                                     <p className="text-sm leading-[1.75] mb-3" style={{ color: '#57534E' }}>
                                         Hi, I'm{' '}
-                                        <span style={{ color: '#1C1917', fontWeight: 600 }}>Joonseo Moon</span>{' '}
-                                        — a full-stack developer who cares about clean architecture and intuitive interfaces. I enjoy working across the entire stack, from designing UIs to building reliable backend systems.
+                                        <span style={{ color: '#1C1917', fontWeight: 600 }}>Joonseo Moon</span>
+                                        {' '}— a Computer Engineering student at Boston University, born in Korea and raised on O'ahu, Hawai'i. Growing up between those worlds shaped how I think about community, adaptability, and building things that genuinely matter to people.
                                     </p>
                                     <p className="text-sm leading-[1.75] mb-8" style={{ color: '#57534E' }}>
-                                        Currently a Software Engineer at{' '}
+                                        My work is driven by a passion for software that creates real impact. Through{' '}
                                         <span style={{ color: '#1C1917', fontWeight: 600 }}>Hack4Impact BU</span>
-                                        , building web applications for nonprofits.
+                                        {' '}I help build technology for nonprofits, which has deepened my interest in full-stack development, AI/ML, and systems that are practical, accessible, and maintainable. I'm continuing to grow through personal projects and my upcoming role as a{' '}
+                                        <span style={{ color: '#1C1917', fontWeight: 600 }}>Software Engineering Intern at DataHouse</span>.
                                     </p>
 
                                     <motion.button

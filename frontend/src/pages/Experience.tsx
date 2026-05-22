@@ -245,7 +245,7 @@ export default function Experience() {
                                 color: COLOR.text, marginBottom: '1.1rem',
                             }}
                         >
-                            experience.
+                            Experience.
                         </motion.h1>
                         <motion.div
                             variants={itemVariants}

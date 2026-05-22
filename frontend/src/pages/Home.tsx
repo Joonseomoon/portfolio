@@ -171,7 +171,7 @@ const Home = () => {
                             className="text-sm leading-relaxed max-w-[300px]"
                             style={{ color: '#78716C' }}
                         >
-                            Building elegant digital experiences with clean code and thoughtful design.
+                            Turning passion into products that create real impact for real users.
                         </p>
                     </motion.div>
 

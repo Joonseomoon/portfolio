@@ -267,9 +267,8 @@ function ProjectCard({ item, index }: { item: IPortfolioItem; index: number }) {
                             <img
                                 src={item.image_url}
                                 alt={item.title}
-                                className="w-full h-full object-cover select-none"
+                                className="w-full h-full object-cover select-none img-hover-transition"
                                 draggable={false}
-                                className="img-hover-transition"
                                 style={{
                                     filter: "saturate(0.65) sepia(0.18) brightness(0.96)",
                                 }}

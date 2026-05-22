@@ -32,9 +32,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 // ── Contact info data ─────────────────────────────────────────────────────────
 const CONTACT_INFO = [
-    { icon: MailIcon,   label: 'Email',          value: 'jsmoon416@gmail.com' },
-    { icon: MapPinIcon, label: 'Location',        value: 'Boston, MA · Honolulu, HI' },
-    { icon: LinkIcon,   label: 'GitHub',          value: 'github.com/joonseomoon' },
+    { icon: MailIcon,     label: 'Email',    value: 'jsmoon416@gmail.com' },
+    { icon: MapPinIcon,   label: 'Location', value: 'Boston, MA · Honolulu, HI' },
+    { icon: LinkIcon,     label: 'GitHub',   value: 'github.com/joonseomoon' },
+    { icon: LinkIcon,     label: 'LinkedIn', value: 'linkedin.com/in/joonseomoon' },
 ];
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
