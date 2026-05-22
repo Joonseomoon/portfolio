@@ -23,7 +23,11 @@ function useOutsideClick(ref: React.RefObject<HTMLDivElement | null>, cb: () => 
 }
 
 // ── Card dimensions ───────────────────────────────────────────────────────────
-const CARD_W = 440;
+const CARD_W = 500;
+
+// ── Animation timing ─────────────────────────────────────────────────────────
+const IMG_TRANSITION_S = 0.45;
+const CARD_HOVER_DURATION_S = 0.36;
 
 // ── Tilt angles for pinboard feel ────────────────────────────────────────────
 const TILTS = [1.8, -1.4, 2.2, -1.9, 1.2, -2.4, 1.6, -1.1];
@@ -236,7 +240,7 @@ function ProjectCard({ item, index }: { item: IPortfolioItem; index: number }) {
                     rotate: 0,
                     scale: 1.04,
                     y: -10,
-                    transition: { duration: 0.36, ease: [0.23, 1, 0.32, 1] },
+                    transition: { duration: CARD_HOVER_DURATION_S, ease: [0.23, 1, 0.32, 1] },
                 }}
                 whileTap={{ scale: 0.97 }}
             >
@@ -265,9 +269,9 @@ function ProjectCard({ item, index }: { item: IPortfolioItem; index: number }) {
                                 alt={item.title}
                                 className="w-full h-full object-cover select-none"
                                 draggable={false}
+                                className="img-hover-transition"
                                 style={{
                                     filter: "saturate(0.65) sepia(0.18) brightness(0.96)",
-                                    transition: "filter 0.45s ease, transform 0.5s ease",
                                 }}
                                 onMouseEnter={(e) => {
                                     const img = e.currentTarget as HTMLImageElement;

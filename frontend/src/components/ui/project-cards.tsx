@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -8,6 +8,8 @@ import type { IPortfolioItem } from "../../api";
 
 // ── Timing constants ──────────────────────────────────────────────────────────
 const STRONG_EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const IMG_HOVER_DURATION_S = 0.45;
+const CARD_SPRING = { type: 'spring' as const, stiffness: 400, damping: 28 };
 
 // ── Warm monochrome tokens ────────────────────────────────────────────────────
 const COLOR = {
@@ -74,7 +76,7 @@ export function ProjectCards({ items }: ProjectCardsProps) {
     if (items.length === 0) return null;
 
     return (
-        <LayoutGroup>
+        <>
             <motion.div
                 className="grid grid-cols-1 gap-4"
                 style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
@@ -96,7 +98,7 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                 y: -3,
                                 backgroundColor: COLOR.cardHover,
                                 borderColor: COLOR.borderHover,
-                                transition: { type: 'spring', stiffness: 400, damping: 28 },
+                                transition: CARD_SPRING,
                             } : {}}
                             onClick={() => setSelectedItem(item)}
                         >
@@ -110,7 +112,7 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                     alt={item.title}
                                     className="w-full h-full object-cover select-none"
                                     draggable={false}
-                                    style={{ transition: 'transform 0.55s ease' }}
+                                    style={{ transition: `transform ${IMG_HOVER_DURATION_S}s ease` }}
                                     onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
                                     onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
                                 />
@@ -179,7 +181,6 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                 })}
             </motion.div>
 
-            {/* ── Expanded modal — portaled to body, matches featured carousel style ── */}
             {createPortal(
             <AnimatePresence>
                 {selectedItem && (
@@ -311,6 +312,6 @@ export function ProjectCards({ items }: ProjectCardsProps) {
             </AnimatePresence>,
             document.body
             )}
-        </LayoutGroup>
+        </>
     );
 }

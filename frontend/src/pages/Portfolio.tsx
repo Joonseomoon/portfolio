@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, MotionConfig, type Variants } from 'framer-motion';
 import { fetchPortfolioItems, type IPortfolioItem } from '../api';
 import { ProjectShowcaseCarousel } from '../components/ui/project-showcase-carousel';
@@ -114,7 +114,7 @@ function SkeletonCarousel() {
         }}>
             {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} style={{
-                    width: 380, flexShrink: 0, borderRadius: 22,
+                    width: 500, flexShrink: 0, borderRadius: 22,
                     background: 'rgba(28,25,23,0.04)',
                     border: '1px solid rgba(28,25,23,0.08)',
                     animation: `pulse 1.5s ease-in-out ${i * 0.15}s infinite`,
@@ -135,54 +135,6 @@ function SkeletonCard() {
                 <div className="h-2.5 w-4/5" style={{ background: 'rgba(28,25,23,0.05)', animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
             </div>
         </div>
-    );
-}
-
-// ── Scroll indicator ──────────────────────────────────────────────────────────
-function ScrollHint() {
-    const ref = useRef<HTMLDivElement>(null);
-    const [visible, setVisible] = useState(true);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const scroller = el.closest('[data-scroll-track]') as HTMLElement | null;
-        if (!scroller) return;
-        const handler = () => setVisible(scroller.scrollLeft < 20);
-        scroller.addEventListener('scroll', handler, { passive: true });
-        return () => scroller.removeEventListener('scroll', handler);
-    }, []);
-
-    return (
-        <motion.div
-            ref={ref}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-            animate={{ opacity: visible ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-        >
-            <span style={{
-                fontFamily: '"DM Sans", system-ui, sans-serif',
-                fontSize: 10,
-                letterSpacing: '0.12em',
-                color: '#A8A29E',
-                textTransform: 'uppercase',
-            }}>
-                scroll
-            </span>
-            <motion.div
-                style={{ display: 'flex', gap: 2 }}
-                animate={{ x: [0, 5, 0] }}
-                transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-            >
-                {[0, 1, 2].map((i) => (
-                    <div key={i} style={{
-                        width: 3, height: 3, borderRadius: '50%',
-                        background: '#A8A29E',
-                        opacity: 1 - i * 0.3,
-                    }} />
-                ))}
-            </motion.div>
-        </motion.div>
     );
 }
 
