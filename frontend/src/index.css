@@ -43,3 +43,11 @@
 .img-hover-transition {
     transition: filter 0.45s ease, transform 0.45s ease;
 }
+
+.exp-company-link {
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.exp-company-link:hover {
+    background: rgba(28,25,23,0.05);
+    border-color: rgba(28,25,23,0.22) !important;
+}

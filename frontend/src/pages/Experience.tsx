@@ -1,245 +1,212 @@
-import { useEffect, useRef, useState } from 'react';
-import { fetchExperiences, IExperience } from '../api';
+import { useEffect, useState } from 'react';
+import { motion, MotionConfig, type Variants } from 'framer-motion';
+import { ExternalLink } from 'lucide-react';
+import { fetchExperiences, type IExperience } from '../api';
 
-// ---------------------------------------------------------------------------
-// Scroll-reveal hook — fires once when the element enters the viewport
-// ---------------------------------------------------------------------------
-function useInView(threshold = 0.05) {
-    const ref = useRef<HTMLDivElement>(null);
-    const [inView, setInView] = useState(false);
+// ── Layout constants ─────────────────────────────────────────────────────────
+const META_W         = 180;
+const CONNECTOR_W    = 28;
+const DOT_SIZE_PX    = 8;
+const CARD_RADIUS_PX = 14;
+const LINE_LEFT_PX   = META_W + CONNECTOR_W / 2;
 
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) setInView(true); },
-            { threshold }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [threshold]);
+// ── Animation constants ───────────────────────────────────────────────────────
+const STRONG_EASE_OUT    = [0.23, 1, 0.32, 1] as const;
+const ITEM_DURATION_S    = 0.45;
+const STAGGER_CHILDREN_S = 0.07;
+const HEADER_DELAY_S     = 0.05;
+const REVEAL_Y_PX        = 20;
+const ENTRY_STAGGER_S    = 0.04;
+const LINK_TRANSITION_S  = 0.18;
 
-    return { ref, inView };
+// ── Warm monochrome tokens ────────────────────────────────────────────────────
+const COLOR = {
+    bg:       '#F7F5F0',
+    text:     '#1C1917',
+    secondary:'#57534E',
+    muted:    '#78716C',
+    label:    '#A8A29E',
+    border:   'rgba(28,25,23,0.09)',
+    cardBg:   'rgba(28,25,23,0.025)',
+    dot:      'rgba(28,25,23,0.22)',
+};
+
+// ── Entrance variants ─────────────────────────────────────────────────────────
+const containerVariants: Variants = {
+    hidden:  {},
+    visible: { transition: { staggerChildren: STAGGER_CHILDREN_S, delayChildren: HEADER_DELAY_S } },
+};
+const itemVariants: Variants = {
+    hidden:  { opacity: 0, y: 18 },
+    visible: { opacity: 1, y: 0, transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT } },
+};
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+function SkeletonRow({ delay = 0 }: { delay?: number }) {
+    return (
+        <div style={{ display: 'flex', gap: 0, marginBottom: 28 }}>
+            <div className="hidden md:flex" style={{ width: META_W, flexShrink: 0, paddingTop: 20, flexDirection: 'column', gap: 8, alignItems: 'flex-end', paddingRight: 20 }}>
+                <div style={{ height: 9, width: '55%', background: 'rgba(28,25,23,0.06)', borderRadius: 3, animation: `pulse 1.5s ease-in-out ${delay}s infinite` }} />
+                <div style={{ height: 13, width: '80%', background: 'rgba(28,25,23,0.08)', borderRadius: 3, animation: `pulse 1.5s ease-in-out ${delay + 0.1}s infinite` }} />
+            </div>
+            <div className="hidden md:flex" style={{ flexShrink: 0, width: CONNECTOR_W, flexDirection: 'column', alignItems: 'center', paddingTop: 24 }}>
+                <div style={{ width: DOT_SIZE_PX, height: DOT_SIZE_PX, borderRadius: '50%', background: 'rgba(28,25,23,0.1)', border: '1px solid rgba(28,25,23,0.12)' }} />
+            </div>
+            <div style={{ flex: 1, background: COLOR.cardBg, border: `1px solid ${COLOR.border}`, borderRadius: CARD_RADIUS_PX, padding: '18px 22px' }}>
+                <div style={{ height: 14, width: '42%', background: 'rgba(28,25,23,0.07)', borderRadius: 3, marginBottom: 8, animation: `pulse 1.5s ease-in-out ${delay + 0.15}s infinite` }} />
+                <div style={{ height: 10, width: '85%', background: 'rgba(28,25,23,0.05)', borderRadius: 3, marginBottom: 5, animation: `pulse 1.5s ease-in-out ${delay + 0.25}s infinite` }} />
+                <div style={{ height: 10, width: '65%', background: 'rgba(28,25,23,0.05)', borderRadius: 3, animation: `pulse 1.5s ease-in-out ${delay + 0.35}s infinite` }} />
+            </div>
+        </div>
+    );
 }
 
-// ---------------------------------------------------------------------------
-// Single timeline card (left or right)
-// ---------------------------------------------------------------------------
-interface CardProps {
-    experience: IExperience;
-    side: 'left' | 'right';
-    inView: boolean;
-}
-
-function TimelineCard({ experience, side, inView }: CardProps) {
-    const translateFrom = side === 'left' ? '-40px' : '40px';
-
-    const cardContent = (
-        <div
-            className="rounded-2xl p-5 transition-all duration-300"
-            style={{
-                background: 'rgba(200,216,255,0.04)',
-                border: '1px solid rgba(200,216,255,0.1)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-            }}
-            onMouseEnter={experience.company_url ? (e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.background = 'rgba(200,216,255,0.08)';
-                el.style.borderColor = 'rgba(200,216,255,0.22)';
-                el.style.boxShadow = '0 0 32px rgba(200,216,255,0.07)';
-            } : undefined}
-            onMouseLeave={experience.company_url ? (e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.background = 'rgba(200,216,255,0.04)';
-                el.style.borderColor = 'rgba(200,216,255,0.1)';
-                el.style.boxShadow = 'none';
-            } : undefined}
-        >
-                    {/* Timeframe */}
-                    <p
-                        className="text-xs font-semibold tracking-[0.25em] uppercase mb-2"
-                        style={{ color: '#6b7fa3' }}
-                    >
-                        {experience.timeframe}
-                    </p>
-
-                    {/* Title */}
-                    <h3
-                        className="text-lg font-bold leading-snug mb-0.5 group-hover:text-[#e8eeff] transition-colors duration-200"
-                        style={{ color: '#c8d8ff' }}
-                    >
-                        {experience.title}
-                    </h3>
-
-                    {/* Company + location */}
-                    <p
-                        className="text-sm font-medium mb-3"
-                        style={{ color: '#8898b8' }}
+// ── Individual experience entry ───────────────────────────────────────────────
+function ExperienceEntry({ experience }: { experience: IExperience }) {
+    return (
+        <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
+            {/* Left meta — sticky, right-aligned */}
+            <div
+                className="hidden md:block"
+                style={{
+                    width: META_W, flexShrink: 0, paddingTop: 20,
+                    textAlign: 'right', paddingRight: 20,
+                    position: 'sticky', top: '4rem', alignSelf: 'flex-start',
+                }}
+            >
+                <p style={{
+                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase',
+                    color: COLOR.label, marginBottom: 5,
+                }}>
+                    {experience.timeframe}
+                </p>
+                {experience.company_url ? (
+                    <a
+                        href={experience.company_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            fontFamily: '"DM Serif Display", Georgia, serif',
+                            fontSize: '0.9rem', fontStyle: 'italic',
+                            color: COLOR.text, textDecoration: 'none',
+                            display: 'inline-flex', alignItems: 'center',
+                            justifyContent: 'flex-end', gap: 4,
+                        }}
                     >
                         {experience.company_name}
-                        {experience.location && (
-                            <span style={{ color: '#4f607a' }}> · {experience.location}</span>
-                        )}
+                        <ExternalLink size={9} style={{ opacity: 0.45, flexShrink: 0 }} />
+                    </a>
+                ) : (
+                    <p style={{
+                        fontFamily: '"DM Serif Display", Georgia, serif',
+                        fontSize: '0.9rem', fontStyle: 'italic', color: COLOR.text,
+                    }}>
+                        {experience.company_name}
                     </p>
+                )}
+            </div>
 
-                    {/* Divider */}
-                    <div
-                        className="mb-3 h-px w-10"
-                        style={{
-                            background: 'linear-gradient(to right, rgba(200,216,255,0.25), transparent)',
-                        }}
-                    />
+            {/* Connector dot */}
+            <div className="hidden md:flex" style={{ flexShrink: 0, width: CONNECTOR_W, flexDirection: 'column', alignItems: 'center', paddingTop: 26 }}>
+                <div style={{
+                    width: DOT_SIZE_PX, height: DOT_SIZE_PX, borderRadius: '50%',
+                    background: COLOR.dot,
+                    border: '1.5px solid rgba(28,25,23,0.2)',
+                }} />
+            </div>
 
-                    {/* Description bullets */}
-                    {experience.description.length > 0 && (
-                        <ul className="space-y-1.5">
-                            {experience.description.map((line, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                    <span
-                                        className="mt-1.5 flex-shrink-0 rounded-full"
-                                        style={{
-                                            width: '4px',
-                                            height: '4px',
-                                            background: 'rgba(200,216,255,0.4)',
-                                        }}
-                                    />
-                                    <span
-                                        className="text-sm leading-relaxed"
-                                        style={{ color: '#7a90b0' }}
-                                    >
-                                        {line}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+            {/* Content card */}
+            <article style={{
+                flex: 1, borderRadius: CARD_RADIUS_PX,
+                border: `1px solid ${COLOR.border}`,
+                background: COLOR.cardBg,
+                padding: '20px 24px',
+            }}>
+                {/* Mobile meta */}
+                <div className="flex items-center gap-1.5 mb-2 md:hidden">
+                    <span style={{ fontFamily: '"DM Sans"', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: COLOR.label }}>
+                        {experience.timeframe}
+                    </span>
+                    <span style={{ color: COLOR.label, fontSize: 9 }}>·</span>
+                    <span style={{ fontFamily: '"DM Serif Display"', fontSize: '0.85rem', fontStyle: 'italic', color: COLOR.muted }}>
+                        {experience.company_name}
+                    </span>
                 </div>
-    );
 
-    return (
-        <div
-            style={{
-                opacity: inView ? 1 : 0,
-                transform: inView ? 'translateX(0)' : `translateX(${translateFrom})`,
-                transition: 'opacity 0.4s ease, transform 0.4s ease',
-                gridColumn: side === 'left' ? '1' : '3',
-            }}
-        >
-            {experience.company_url ? (
-                <a
-                    href={experience.company_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block group"
-                    style={{ textDecoration: 'none' }}
-                >
-                    {cardContent}
-                </a>
-            ) : (
-                <div className="group">{cardContent}</div>
-            )}
+                {/* Role title */}
+                <h2 style={{
+                    fontFamily: '"DM Serif Display", Georgia, serif',
+                    fontSize: 'clamp(1rem, 2vw, 1.2rem)', fontWeight: 400,
+                    fontStyle: 'italic', lineHeight: 1.2, letterSpacing: '-0.012em',
+                    color: COLOR.text, marginBottom: 3,
+                }}>
+                    {experience.title}
+                </h2>
+
+                {/* Location */}
+                {experience.location && (
+                    <p style={{
+                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                        fontSize: 10, letterSpacing: '0.12em', color: COLOR.label,
+                        marginBottom: 14,
+                    }}>
+                        {experience.location}
+                    </p>
+                )}
+
+                {/* All bullets */}
+                {experience.description.length > 0 && (
+                    <ul style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {experience.description.map((line, i) => (
+                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                                <div style={{
+                                    width: 4, height: 4, borderRadius: '50%', marginTop: 9, flexShrink: 0,
+                                    background: 'rgba(28,25,23,0.2)',
+                                }} />
+                                <span style={{
+                                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                                    fontSize: '0.8rem', lineHeight: 1.75, color: COLOR.muted,
+                                }}>
+                                    {line}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                {/* Company link */}
+                {experience.company_url && (
+                    <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+                        <a
+                            href={experience.company_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="exp-company-link"
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 5,
+                                fontFamily: '"DM Sans", system-ui, sans-serif',
+                                fontSize: 11, letterSpacing: '0.04em',
+                                color: COLOR.secondary, textDecoration: 'none',
+                                border: '1px solid rgba(28,25,23,0.14)',
+                                borderRadius: 8, padding: '5px 12px',
+                            }}
+                        >
+                            Visit company
+                            <ExternalLink size={10} style={{ opacity: 0.6 }} />
+                        </a>
+                    </div>
+                )}
+            </article>
         </div>
     );
 }
 
-// ---------------------------------------------------------------------------
-// Animated timeline node on the centre line
-// ---------------------------------------------------------------------------
-function TimelineNode({ inView }: { inView: boolean }) {
-    return (
-        <div
-            className="col-start-2 flex flex-col items-center"
-            style={{ paddingTop: '24px' }}
-        >
-            {/* Dot */}
-            <div
-                className="z-10 rounded-full flex-shrink-0 transition-all duration-500"
-                style={{
-                    width: '13px',
-                    height: '13px',
-                    background: inView ? '#c8d8ff' : 'rgba(200,216,255,0.2)',
-                    boxShadow: inView
-                        ? '0 0 12px 3px rgba(200,216,255,0.35), 0 0 24px 6px rgba(200,216,255,0.12)'
-                        : 'none',
-                    border: '2px solid rgba(200,216,255,0.35)',
-                    transitionDelay: '0.1s',
-                }}
-            />
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------------
-// Row wrapper — manages shared inView state for card + node
-// ---------------------------------------------------------------------------
-interface RowProps {
-    experience: IExperience;
-    index: number;
-}
-
-function TimelineRow({ experience, index }: RowProps) {
-    const side = index % 2 === 0 ? 'left' : 'right';
-    const { ref, inView } = useInView(0.05);
-
-    return (
-        <div
-            ref={ref}
-            className="grid items-start"
-            style={{
-                gridTemplateColumns: '1fr 40px 1fr',
-                gap: '0 20px',
-                marginBottom: '48px',
-            }}
-        >
-            {/* Left slot */}
-            {side === 'left' ? (
-                <TimelineCard experience={experience} side="left" inView={inView} />
-            ) : (
-                <div />
-            )}
-
-            {/* Centre node */}
-            <TimelineNode inView={inView} />
-
-            {/* Right slot */}
-            {side === 'right' ? (
-                <TimelineCard experience={experience} side="right" inView={inView} />
-            ) : (
-                <div />
-            )}
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------------
-// Skeleton card shown while data loads
-// ---------------------------------------------------------------------------
-function SkeletonCard() {
-    return (
-        <div
-            className="rounded-2xl p-5"
-            style={{
-                background: 'rgba(200,216,255,0.03)',
-                border: '1px solid rgba(200,216,255,0.07)',
-            }}
-        >
-            <div className="rounded mb-3" style={{ height: '10px', width: '30%', background: 'rgba(200,216,255,0.08)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-            <div className="rounded mb-2" style={{ height: '16px', width: '60%', background: 'rgba(200,216,255,0.1)', animation: 'pulse 1.5s ease-in-out 0.1s infinite' }} />
-            <div className="rounded mb-4" style={{ height: '12px', width: '40%', background: 'rgba(200,216,255,0.07)', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
-            <div className="rounded mb-2" style={{ height: '10px', width: '90%', background: 'rgba(200,216,255,0.06)', animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
-            <div className="rounded" style={{ height: '10px', width: '75%', background: 'rgba(200,216,255,0.06)', animation: 'pulse 1.5s ease-in-out 0.4s infinite' }} />
-        </div>
-    );
-}
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function Experience() {
     const [experiences, setExperiences] = useState<IExperience[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading]         = useState(true);
+    const [error, setError]             = useState<string | null>(null);
 
     useEffect(() => {
         fetchExperiences()
@@ -249,118 +216,91 @@ export default function Experience() {
     }, []);
 
     return (
-        <div
-            className="flex-1 overflow-y-auto"
-            style={{ background: '#03030f' }}
-        >
-            {/* Deep-space gradient */}
+        <MotionConfig reducedMotion="user">
             <div
-                className="fixed inset-0 pointer-events-none"
-                style={{
-                    background:
-                        'radial-gradient(ellipse 80% 50% at 50% 0%, #0b0b2e 0%, #03030f 65%)',
-                    zIndex: 0,
-                }}
-            />
-
-            <div
-                className="relative z-10 mx-auto max-w-4xl px-6 py-16"
+                className="flex-1 overflow-y-auto relative"
+                style={{ background: COLOR.bg, fontFamily: '"DM Sans", system-ui, sans-serif' }}
             >
-                {/* Page header */}
-                <div className="mb-16 text-center">
-                    <p
-                        className="text-xs font-semibold tracking-[0.35em] uppercase mb-3"
-                        style={{ color: '#6b7fa3' }}
-                    >
-                        Career
-                    </p>
-                    <h1
-                        className="text-4xl sm:text-5xl font-bold"
-                        style={{
-                            background:
-                                'linear-gradient(135deg, #e8eeff 0%, #c8d8ff 45%, #a5b4fc 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            filter: 'drop-shadow(0 0 18px rgba(165,180,252,0.3))',
-                        }}
-                    >
-                        Experience
-                    </h1>
-                    <div
-                        className="mx-auto mt-5 h-px w-16"
-                        style={{
-                            background:
-                                'linear-gradient(to right, transparent, rgba(200,216,255,0.4), transparent)',
-                        }}
-                    />
-                </div>
+                {/* Grain overlay */}
+                <div
+                    className="fixed inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'repeat', backgroundSize: '160px',
+                        opacity: 0.025, mixBlendMode: 'multiply',
+                    }}
+                />
 
-                {/* Skeleton loader */}
-                {loading && (
-                    <div className="relative">
-                        <div
-                            className="absolute top-0 bottom-0 pointer-events-none"
+                <div className="relative z-10 mx-auto px-8 sm:px-16 pt-12 pb-28" style={{ maxWidth: 1020 }}>
+
+                    {/* ── Editorial header ───────────────────────────── */}
+                    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                        <motion.h1
+                            variants={itemVariants}
                             style={{
-                                left: 'calc(50% - 1px)',
-                                width: '2px',
-                                background: 'linear-gradient(to bottom, transparent, rgba(200,216,255,0.08) 8%, rgba(200,216,255,0.08) 92%, transparent)',
+                                fontFamily: '"DM Serif Display", Georgia, serif',
+                                fontSize: 'clamp(3rem, 6vw, 5.5rem)',
+                                fontWeight: 400, fontStyle: 'italic',
+                                lineHeight: 0.94, letterSpacing: '-0.03em',
+                                color: COLOR.text, marginBottom: '1.1rem',
+                            }}
+                        >
+                            experience.
+                        </motion.h1>
+                        <motion.div
+                            variants={itemVariants}
+                            style={{
+                                height: 1,
+                                background: 'linear-gradient(to right, rgba(28,25,23,0.22) 0%, rgba(28,25,23,0.08) 60%, transparent 100%)',
                             }}
                         />
-                        {[0, 1, 2].map((i) => (
-                            <div
-                                key={i}
-                                className="grid items-start"
-                                style={{ gridTemplateColumns: '1fr 40px 1fr', gap: '0 20px', marginBottom: '48px' }}
-                            >
-                                {i % 2 === 0 ? (
-                                    <SkeletonCard />
-                                ) : <div />}
-                                <div className="col-start-2 flex justify-center" style={{ paddingTop: '24px' }}>
-                                    <div className="rounded-full" style={{ width: '13px', height: '13px', background: 'rgba(200,216,255,0.1)', border: '2px solid rgba(200,216,255,0.15)' }} />
+                    </motion.div>
+
+                    {/* ── Timeline ───────────────────────────────────── */}
+                    <div className="mt-12">
+                        {loading && (
+                            <div>{[0, 1, 2].map((i) => <SkeletonRow key={i} delay={i * 0.1} />)}</div>
+                        )}
+
+                        {error && (
+                            <p style={{ color: COLOR.label, fontSize: '0.875rem' }}>
+                                Could not load experiences — {error}
+                            </p>
+                        )}
+
+                        {!loading && !error && experiences.length === 0 && (
+                            <p style={{ color: COLOR.label, fontSize: '0.875rem' }}>No experiences found.</p>
+                        )}
+
+                        {!loading && !error && experiences.length > 0 && (
+                            <div style={{ position: 'relative' }}>
+                                {/* Vertical connector line */}
+                                <div
+                                    className="hidden md:block absolute pointer-events-none"
+                                    style={{
+                                        left: LINE_LEFT_PX,
+                                        top: 26, bottom: 26, width: 1,
+                                        background: 'linear-gradient(to bottom, transparent, rgba(28,25,23,0.1) 5%, rgba(28,25,23,0.1) 95%, transparent)',
+                                    }}
+                                />
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                                    {experiences.map((exp, i) => (
+                                        <motion.div
+                                            key={exp.id}
+                                            initial={{ opacity: 0, y: REVEAL_Y_PX }}
+                                            whileInView={{ opacity: 1, y: 0, transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT, delay: i * ENTRY_STAGGER_S } }}
+                                            viewport={{ once: true, margin: '-60px' }}
+                                        >
+                                            <ExperienceEntry experience={exp} />
+                                        </motion.div>
+                                    ))}
                                 </div>
-                                {i % 2 !== 0 ? (
-                                    <SkeletonCard />
-                                ) : <div />}
                             </div>
-                        ))}
+                        )}
                     </div>
-                )}
-
-                {/* Error */}
-                {error && (
-                    <p className="text-center text-sm" style={{ color: '#7a90b0' }}>
-                        Could not load experiences — {error}
-                    </p>
-                )}
-
-                {/* Empty */}
-                {!loading && !error && experiences.length === 0 && (
-                    <p className="text-center text-sm" style={{ color: '#4f607a' }}>
-                        No experiences found.
-                    </p>
-                )}
-
-                {/* Timeline */}
-                {experiences.length > 0 && (
-                    <div className="relative">
-                        {/* Vertical centre line */}
-                        <div
-                            className="absolute top-0 bottom-0 pointer-events-none"
-                            style={{
-                                left: 'calc(50% - 1px)',
-                                width: '2px',
-                                background:
-                                    'linear-gradient(to bottom, transparent, rgba(200,216,255,0.18) 8%, rgba(200,216,255,0.18) 92%, transparent)',
-                            }}
-                        />
-
-                        {experiences.map((exp, i) => (
-                            <TimelineRow key={exp.id} experience={exp} index={i} />
-                        ))}
-                    </div>
-                )}
+                </div>
             </div>
-        </div>
+        </MotionConfig>
     );
 }
