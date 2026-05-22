@@ -1,6 +1,6 @@
 # Joonseo Moon — Portfolio
 
-Personal portfolio site built with React + TypeScript (Vite) on the frontend, Supabase (PostgreSQL) as the database, and Supabase Edge Functions for server-side logic.
+Personal portfolio site built with React + TypeScript (Vite), Supabase (PostgreSQL + Edge Functions), and deployed to Vercel at [joonseomoon.com](https://joonseomoon.com).
 
 ---
 
@@ -9,10 +9,12 @@ Personal portfolio site built with React + TypeScript (Vite) on the frontend, Su
 | Layer          | Technology                           |
 |----------------|--------------------------------------|
 | Frontend       | React, TypeScript, Vite, Tailwind v4 |
+| Animation      | Framer Motion                        |
 | Database       | Supabase (PostgreSQL)                |
 | Storage        | Supabase Storage                     |
 | Edge Functions | Supabase Edge Functions (Deno)       |
 | Email          | Resend                               |
+| Hosting        | Vercel                               |
 | CI             | GitHub Actions (type check + build)  |
 
 ---
@@ -21,14 +23,17 @@ Personal portfolio site built with React + TypeScript (Vite) on the frontend, Su
 
 ```
 portfolio/
+├── vercel.json                # SPA rewrite rule (all routes → index.html)
 ├── frontend/                  # Vite + React app (port 5173 in dev)
 │   └── src/
 │       ├── pages/             # One file per route
-│       ├── components/        # Navbar
+│       ├── components/
+│       │   ├── Navbar.tsx     # Responsive nav with mobile hamburger drawer
+│       │   └── ui/            # Shared UI components
 │       ├── lib/
 │       │   └── supabase.ts    # Supabase client instance
 │       ├── api.ts             # All Supabase query functions + types
-│       └── vite-env.d.ts      # Env var type declarations
+│       └── index.css          # Global styles, keyframes, utility classes
 └── supabase/
     └── functions/
         └── send-contact-email/ # Edge function — calls Resend API
@@ -48,18 +53,20 @@ Create `frontend/.env.local` with your Supabase credentials (see `frontend/.env.
 
 ## Environment Variables
 
-| Variable               | Where          | Purpose                    |
-|------------------------|----------------|----------------------------|
-| `VITE_SUPABASE_URL`    | `.env.local`   | Supabase project URL       |
-| `VITE_SUPABASE_ANON_KEY` | `.env.local` | Supabase anon public key   |
-| `RESEND_API_KEY`       | Supabase secret | Resend API key (send-only) |
-| `CONTACT_EMAIL`        | Supabase secret | Email address to receive contact form submissions |
+| Variable                 | Where           | Purpose                                           |
+|--------------------------|-----------------|---------------------------------------------------|
+| `VITE_SUPABASE_URL`      | `.env.local`    | Supabase project URL                              |
+| `VITE_SUPABASE_ANON_KEY` | `.env.local`    | Supabase anon public key                          |
+| `RESEND_API_KEY`         | Supabase secret | Resend API key (send-only)                        |
+| `CONTACT_EMAIL`          | Supabase secret | Email address to receive contact form submissions |
 
 Set Supabase secrets via CLI:
 ```bash
 supabase secrets set RESEND_API_KEY=your_key
 supabase secrets set CONTACT_EMAIL=your_email
 ```
+
+Vercel deployment requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set as environment variables in the Vercel dashboard, and as GitHub repository secrets for CI.
 
 ---
 
@@ -93,7 +100,7 @@ All data is managed through the [Supabase Table Editor](https://supabase.com/das
 | timeframe    | text   | yes      | Display string e.g. "May – Aug 2024" |
 | location     | text   | yes      |                                      |
 | description  | text[] | no       | Bullet points                        |
-| company_url  | text   | no       | Makes the card a clickable link      |
+| company_url  | text   | no       | Makes the company name a clickable link |
 
 ### `portfolio_items`
 
@@ -108,42 +115,59 @@ All data is managed through the [Supabase Table Editor](https://supabase.com/das
 
 ### `skills`
 
-| Column   | Type | Required | Notes                                          |
-|----------|------|----------|------------------------------------------------|
-| id       | uuid | auto     | Primary key                                    |
-| title    | text | yes      | e.g. TypeScript                                |
-| icon_url | text | yes      | Icon image URL                                 |
-| category | text | no       | Groups skills on About page (Languages, etc.)  |
+| Column   | Type | Required | Notes                                         |
+|----------|------|----------|-----------------------------------------------|
+| id       | uuid | auto     | Primary key                                   |
+| title    | text | yes      | e.g. TypeScript                               |
+| icon_url | text | yes      | Icon image URL                                |
+| category | text | no       | Groups skills on About page (Languages, etc.) |
 
 ---
 
 ## Frontend Pages
 
-| Route         | File                       | Status                          |
-|---------------|----------------------------|---------------------------------|
-| `/`           | `src/pages/Home.tsx`       | Done                            |
-| `/about`      | `src/pages/About.tsx`      | Done                            |
-| `/experience` | `src/pages/Experience.tsx` | Done                            |
-| `/portfolio`  | `src/pages/Portfolio.tsx`  | Done                            |
-| `/contact`    | `src/pages/Contact.tsx`    | Done                            |
-| Resume        | —                          | External link (Supabase Storage)|
+| Route         | File                       | Description                                      |
+|---------------|----------------------------|--------------------------------------------------|
+| `/`           | `src/pages/Home.tsx`       | Landing — large serif name, role, CTAs           |
+| `/about`      | `src/pages/About.tsx`      | Bio, profile photo, stats, categorised skills    |
+| `/experience` | `src/pages/Experience.tsx` | Timeline of work experience from Supabase        |
+| `/portfolio`  | `src/pages/Portfolio.tsx`  | Featured carousel + full projects grid           |
+| `/contact`    | `src/pages/Contact.tsx`    | Contact card with form → Supabase Edge Function  |
+| Resume        | —                          | External link (Supabase Storage PDF)             |
 
 ---
 
 ## Design System
 
-Moon theme. All colors applied via inline styles or Tailwind arbitrary values.
+Warm monochrome editorial theme. Colors applied via inline styles — no CSS custom properties.
 
-| Token           | Value                   | Usage                       |
-|-----------------|-------------------------|-----------------------------|
-| Deep space bg   | `#03030f`               | Page backgrounds            |
-| Lunar white     | `#e8eeff`               | Primary headings            |
-| Lunar silver    | `#c8d8ff`               | Accents, active nav, CTAs   |
-| Muted starlight | `#6b7fa3`               | Eyebrows, secondary text    |
-| Dim             | `#4f607a`               | Tertiary text, separators   |
-| Glow            | `rgba(200,216,255,0.x)` | Drop shadows, radial glows  |
+| Token   | Value                    | Usage                              |
+|---------|--------------------------|------------------------------------|
+| bg      | `#F7F5F0`                | Page backgrounds                   |
+| text    | `#1C1917`                | Primary headings, body             |
+| secondary | `#57534E`              | Body text                          |
+| muted   | `#78716C`                | Secondary text, nav links          |
+| label   | `#A8A29E`                | Eyebrows, captions, placeholders   |
+| border  | `rgba(28,25,23,0.09–0.2)`| Dividers, card borders             |
 
-Custom keyframes in `frontend/src/index.css`: `twinkle`, `moonFloat`, `fadeSlideUp`, `pulse`.
+**Typography:** DM Serif Display (italic headings) + DM Sans (body, UI)
+
+**Animations:** Framer Motion throughout. All timing values use named constants — no magic numbers. Hover transitions scoped to CSS classes in `index.css` (not inline styles) so they don't fire on mount.
+
+**Grain overlay:** Fixed SVG `feTurbulence` layer at `opacity: 0.025`, `mixBlendMode: multiply` — present on every page.
+
+---
+
+## Deployment
+
+Hosted on Vercel. The `frontend/` directory is set as the Vercel root directory.
+
+- Every push to `main` triggers an automatic redeploy
+- `frontend/vercel.json` rewrites all routes to `index.html` for client-side routing
+
+```json
+{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
 
 ---
 
@@ -153,22 +177,17 @@ GitHub Actions runs on every push to `main` and every pull request:
 - `tsc --noEmit` — type check
 - `vite build` — production build
 
-Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set as GitHub repository secrets.
+---
+
+## Profile Photo
+
+Place your photo at `frontend/public/profile.jpg`. The About page displays it at 260×340 px with `object-fit: cover` and `object-position: center top`.
 
 ---
 
 ## Future Development Notes
 
-- **Admin UI** — content is managed via the Supabase Table Editor. A protected `/admin` page built with Supabase Auth is a future priority.
+- **Portfolio item links** — add `project_url` / `github_url` columns to `portfolio_items` and render as icon buttons on each card.
+- **Experience company logos** — add a `logo_url` column to `experiences` and display logos on the timeline.
 - **Custom email domain** — verify a domain in Resend to send contact emails from a personal address instead of `onboarding@resend.dev`.
-- **Deployment** — frontend deploys to Vercel/Netlify. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in the hosting dashboard. No separate backend to deploy.
-
----
-
-## TODO
-
-- **Portfolio item links** — add a `project_url` (and optionally `github_url`) column to `portfolio_items`. Update the Portfolio page so each card links out to the live site or GitHub repo. Both URLs should be stored in Supabase and rendered as icon buttons (e.g. globe + GitHub mark) on the card.
-
-- **Experience company logos** — add a `logo_url` column to the `experiences` table. Replace the animated dot on the centre timeline node with a circular company logo image (white background, `rounded-full`, `object-contain`). Falls back to the current dot if no logo is provided. Upload logos to Supabase Storage.
-
-- **Portfolio images** — take a screenshot of each project's frontend UI, upload to a `portfolio-images` Supabase Storage bucket, and paste the public URL as `image_url` when adding the row to `portfolio_items`.
+- **Admin UI** — a protected `/admin` page backed by Supabase Auth for managing content without the Supabase dashboard.
