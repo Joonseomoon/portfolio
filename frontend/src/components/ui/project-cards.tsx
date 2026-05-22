@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence, useReducedMotion, LayoutGroup } from "framer-motion";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { IPortfolioItem } from "../../api";
 
@@ -54,10 +55,20 @@ export function ProjectCards({ items }: ProjectCardsProps) {
         return () => clearTimeout(t);
     }, []);
 
-    // Lock body scroll when modal is open
+    // Lock body scroll (same approach as featured carousel) + Escape to close
     useEffect(() => {
-        document.body.style.overflow = selectedItem ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
+        if (!selectedItem) return;
+        const scrollY = window.scrollY;
+        document.body.style.cssText = `position:fixed;top:-${scrollY}px;width:100%;overflow:hidden`;
+        document.body.dataset.scrollY = String(scrollY);
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedItem(null); };
+        window.addEventListener('keydown', handler);
+        return () => {
+            const sy = parseInt(document.body.dataset.scrollY ?? '0', 10);
+            document.body.style.cssText = '';
+            window.scrollTo({ top: sy, behavior: 'instant' as ScrollBehavior });
+            window.removeEventListener('keydown', handler);
+        };
     }, [selectedItem]);
 
     if (items.length === 0) return null;
@@ -72,11 +83,9 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                 variants={shouldAnimate ? containerVariants : {}}
             >
                 {items.map((item) => {
-                    if (selectedItem?.id === item.id) return null;
                     return (
                         <motion.article
                             key={item.id}
-                            layoutId={`card-${item.id}`}
                             className="flex flex-col overflow-hidden cursor-pointer"
                             style={{
                                 background: COLOR.card,
@@ -92,8 +101,7 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                             onClick={() => setSelectedItem(item)}
                         >
                             {/* Thumbnail */}
-                            <motion.div
-                                layoutId={`card-image-${item.id}`}
+                            <div
                                 className="relative overflow-hidden"
                                 style={{ aspectRatio: '16/9' }}
                             >
@@ -122,12 +130,11 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                         Featured
                                     </div>
                                 )}
-                            </motion.div>
+                            </div>
 
                             {/* Body */}
-                            <motion.div layoutId={`card-body-${item.id}`} className="p-4 flex flex-col flex-1">
-                                <motion.h3
-                                    layoutId={`card-title-${item.id}`}
+                            <div className="p-4 flex flex-col flex-1">
+                                <h3
                                     className="text-sm font-semibold leading-snug mb-1.5"
                                     style={{
                                         fontFamily: '"DM Serif Display", Georgia, serif',
@@ -136,7 +143,7 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                     }}
                                 >
                                     {item.title}
-                                </motion.h3>
+                                </h3>
 
                                 <p
                                     className="text-xs leading-relaxed flex-1"
@@ -166,64 +173,71 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                         ))}
                                     </div>
                                 )}
-                            </motion.div>
+                            </div>
                         </motion.article>
                     );
                 })}
             </motion.div>
 
-            {/* ── Expanded modal ── */}
+            {/* ── Expanded modal — portaled to body, matches featured carousel style ── */}
+            {createPortal(
             <AnimatePresence>
                 {selectedItem && (
-                    <>
-                        {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 z-50 overflow-y-auto"
+                        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '5vh 1.5rem 2rem' }}
+                    >
+                        {/* Backdrop — covers navbar */}
                         <motion.div
-                            className="fixed inset-0 z-40"
-                            style={{ background: COLOR.backdrop, backdropFilter: 'blur(6px)' }}
+                            className="absolute inset-0"
+                            style={{ background: COLOR.backdrop, backdropFilter: 'blur(12px)' }}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedItem(null)}
                         />
 
-                        {/* Expanded card */}
+                        {/* Content-sized panel */}
                         <motion.div
-                            layoutId={`card-${selectedItem.id}`}
-                            className="fixed z-50 overflow-hidden"
+                            className="relative z-10 w-full overflow-hidden"
                             style={{
-                                inset: '2rem',
-                                maxWidth: '860px',
-                                margin: 'auto',
+                                maxWidth: 760,
                                 background: COLOR.bg,
-                                border: `1px solid rgba(28,25,23,0.14)`,
-                                boxShadow: '0 24px 80px rgba(28,25,23,0.14)',
+                                borderRadius: 20,
+                                border: '1px solid rgba(28,25,23,0.12)',
+                                boxShadow: '0 40px 100px rgba(28,25,23,0.18), 0 8px 24px rgba(28,25,23,0.1)',
                             }}
+                            initial={{ opacity: 0, scale: 0.92, y: 24 }}
+                            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.38, ease: STRONG_EASE_OUT } }}
+                            exit={{ opacity: 0, scale: 0.95, y: 12, transition: { duration: 0.22, ease: 'easeIn' } }}
                         >
                             {/* Close */}
                             <motion.button
-                                className="absolute top-3 right-3 z-10 flex items-center justify-center cursor-pointer"
+                                className="absolute top-4 right-4 z-20 flex items-center justify-center cursor-pointer"
                                 style={{
-                                    width: 32, height: 32,
-                                    background: 'rgba(247,245,240,0.9)',
-                                    border: `1px solid rgba(28,25,23,0.12)`,
-                                    color: COLOR.muted,
+                                    width: 34, height: 34,
+                                    background: 'rgba(247,245,240,0.95)',
+                                    backdropFilter: 'blur(8px)',
+                                    border: '1px solid rgba(28,25,23,0.18)',
+                                    color: COLOR.text,
+                                    borderRadius: '50%',
+                                    boxShadow: '0 2px 8px rgba(28,25,23,0.14)',
                                 }}
-                                initial={{ opacity: 0, scale: 0.8 }}
+                                initial={{ opacity: 0, scale: 0.7 }}
                                 animate={{ opacity: 1, scale: 1, transition: { delay: 0.18 } }}
-                                whileHover={{ backgroundColor: COLOR.card, color: COLOR.text }}
-                                whileTap={{ scale: 0.93 }}
+                                whileHover={{ backgroundColor: 'rgba(237,232,222,0.98)' }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={() => setSelectedItem(null)}
                                 aria-label="Close"
                             >
                                 <X size={14} />
                             </motion.button>
 
-                            <div className="h-full overflow-y-auto">
+                            <div style={{ maxHeight: '80vh', overflowY: 'auto' }}>
                                 {/* Hero image */}
-                                <motion.div
-                                    layoutId={`card-image-${selectedItem.id}`}
+                                <div
                                     className="relative w-full overflow-hidden"
-                                    style={{ aspectRatio: '16/9' }}
+                                    style={{ aspectRatio: '16/9', borderRadius: '20px 20px 0 0' }}
                                 >
                                     <img
                                         src={selectedItem.image_url}
@@ -231,48 +245,51 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                         className="w-full h-full object-cover select-none"
                                         draggable={false}
                                     />
-                                    <div
-                                        className="absolute inset-0 pointer-events-none"
-                                        style={{ background: 'linear-gradient(to top, rgba(247,245,240,0.5) 0%, transparent 40%)' }}
-                                    />
-                                </motion.div>
+                                </div>
 
                                 {/* Content */}
-                                <motion.div layoutId={`card-body-${selectedItem.id}`} className="p-6 sm:p-8">
+                                <div className="p-7 sm:p-9">
                                     <motion.h2
-                                        layoutId={`card-title-${selectedItem.id}`}
                                         className="mb-4"
                                         style={{
                                             fontFamily: '"DM Serif Display", Georgia, serif',
-                                            fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+                                            fontSize: 'clamp(1.5rem, 3vw, 2.2rem)',
                                             fontWeight: 400,
+                                            fontStyle: 'italic',
                                             lineHeight: 1.1,
                                             letterSpacing: '-0.02em',
                                             color: COLOR.text,
+                                            textTransform: 'lowercase',
                                         }}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0, transition: { delay: 0.18, duration: 0.36, ease: STRONG_EASE_OUT } }}
                                     >
-                                        {selectedItem.title}
+                                        {selectedItem.title}.
                                     </motion.h2>
 
                                     <motion.p
                                         className="text-sm leading-[1.8] mb-6"
-                                        style={{ color: COLOR.muted, maxWidth: '68ch' }}
-                                        initial={{ opacity: 0, transform: 'translateY(12px)' }}
-                                        animate={{ opacity: 1, transform: 'translateY(0px)', transition: { delay: 0.22, duration: 0.38, ease: STRONG_EASE_OUT } }}
+                                        style={{ color: COLOR.muted, maxWidth: '60ch', fontFamily: '"DM Sans", system-ui, sans-serif' }}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0, transition: { delay: 0.24, duration: 0.36, ease: STRONG_EASE_OUT } }}
                                     >
                                         {selectedItem.description}
                                     </motion.p>
 
                                     {selectedItem.icon_urls.length > 0 && (
                                         <motion.div
-                                            initial={{ opacity: 0, transform: 'translateY(8px)' }}
-                                            animate={{ opacity: 1, transform: 'translateY(0px)', transition: { delay: 0.3, duration: 0.36, ease: STRONG_EASE_OUT } }}
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0, transition: { delay: 0.32, duration: 0.32, ease: STRONG_EASE_OUT } }}
                                         >
-                                            <p
-                                                className="text-[10px] tracking-[0.22em] uppercase mb-3"
-                                                style={{ color: COLOR.label }}
-                                            >
-                                                Tech Stack
+                                            <p style={{
+                                                fontFamily: '"DM Sans", system-ui, sans-serif',
+                                                fontSize: 9,
+                                                letterSpacing: '0.24em',
+                                                textTransform: 'uppercase',
+                                                color: COLOR.label,
+                                                marginBottom: 10,
+                                            }}>
+                                                Stack
                                             </p>
                                             <div className="flex items-center gap-3 flex-wrap">
                                                 {selectedItem.icon_urls.map((url, i) => (
@@ -286,12 +303,14 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                             </div>
                                         </motion.div>
                                     )}
-                                </motion.div>
+                                </div>
                             </div>
                         </motion.div>
-                    </>
+                    </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+            )}
         </LayoutGroup>
     );
 }

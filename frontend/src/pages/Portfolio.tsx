@@ -1,22 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, MotionConfig, type Variants } from 'framer-motion';
 import { fetchPortfolioItems, type IPortfolioItem } from '../api';
-import ElegantCarousel from '../components/ui/elegant-carousel';
+import { ProjectShowcaseCarousel } from '../components/ui/project-showcase-carousel';
 import { ProjectCards } from '../components/ui/project-cards';
 
 // ── Timing ───────────────────────────────────────────────────────────────────
 const STRONG_EASE_OUT    = [0.23, 1, 0.32, 1] as const;
-const ITEM_DURATION_S    = 0.42;
-const STAGGER_CHILDREN_S = 0.06;
+const ITEM_DURATION_S    = 0.45;
+const STAGGER_CHILDREN_S = 0.07;
 
-// ── Scroll-reveal ─────────────────────────────────────────────────────────────
+// ── Entrance variants ─────────────────────────────────────────────────────────
 const containerVariants: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: STAGGER_CHILDREN_S, delayChildren: 0.05 } },
 };
-
 const itemVariants: Variants = {
-    hidden:  { opacity: 0, transform: 'translateY(16px)' },
+    hidden:  { opacity: 0, transform: 'translateY(18px)' },
     visible: { opacity: 1, transform: 'translateY(0px)', transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT } },
 };
 
@@ -28,21 +27,80 @@ function FadeUp({ children, delay = 0, className }: {
             className={className}
             initial={{ opacity: 0, transform: 'translateY(14px)' }}
             whileInView={{ opacity: 1, transform: 'translateY(0px)', transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT, delay } }}
-            viewport={{ once: true, margin: '-50px' }}
+            viewport={{ once: true, margin: '-40px' }}
         >
             {children}
         </motion.div>
     );
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
-function SectionLabel({ label }: { label: string }) {
+// ── Editorial section marker ──────────────────────────────────────────────────
+function SectionMarker({
+    index,
+    label,
+    hint,
+}: {
+    index: string;
+    label: string;
+    hint?: string;
+}) {
     return (
-        <div className="flex items-center gap-4 mb-6">
-            <p className="text-xs font-semibold tracking-[0.35em] uppercase flex-shrink-0" style={{ color: '#A8A29E' }}>
-                {label}
-            </p>
-            <div className="flex-1 h-px" style={{ background: 'rgba(28,25,23,0.1)' }} />
+        <div className="flex items-center gap-0 w-full">
+            {/* Index tab */}
+            <div
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '5px 14px 5px 0',
+                    borderRight: '1px solid rgba(28,25,23,0.14)',
+                    marginRight: 16,
+                    flexShrink: 0,
+                }}
+            >
+                <span style={{
+                    fontFamily: '"DM Serif Display", Georgia, serif',
+                    fontSize: '11px',
+                    fontStyle: 'italic',
+                    color: '#A8A29E',
+                    letterSpacing: '0.05em',
+                }}>
+                    {index}
+                </span>
+                <span style={{
+                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontSize: '10px',
+                    letterSpacing: '0.3em',
+                    textTransform: 'uppercase',
+                    color: '#57534E',
+                    fontWeight: 500,
+                }}>
+                    {label}
+                </span>
+            </div>
+
+            {/* Dot-dash rule */}
+            <div style={{ flex: 1, position: 'relative', height: 1 }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(28,25,23,0.08)' }} />
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'repeating-linear-gradient(to right, rgba(28,25,23,0.18) 0px, rgba(28,25,23,0.18) 3px, transparent 3px, transparent 10px)',
+                }} />
+            </div>
+
+            {hint && (
+                <span style={{
+                    marginLeft: 14,
+                    fontFamily: '"DM Serif Display", Georgia, serif',
+                    fontSize: '10px',
+                    fontStyle: 'italic',
+                    color: '#A8A29E',
+                    letterSpacing: '0.06em',
+                    flexShrink: 0,
+                }}>
+                    {hint}
+                </span>
+            )}
         </div>
     );
 }
@@ -50,14 +108,20 @@ function SectionLabel({ label }: { label: string }) {
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 function SkeletonCarousel() {
     return (
-        <div
-            style={{
-                height: '420px',
-                background: 'rgba(28,25,23,0.03)',
-                border: '1px solid rgba(28,25,23,0.08)',
-                animation: 'pulse 1.5s ease-in-out infinite',
-            }}
-        />
+        <div className="flex gap-8 overflow-hidden" style={{
+            paddingLeft: 'max(5vw, 32px)', paddingRight: 'max(5vw, 32px)',
+            paddingTop: 48, paddingBottom: 64,
+        }}>
+            {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} style={{
+                    width: 380, flexShrink: 0, borderRadius: 22,
+                    background: 'rgba(28,25,23,0.04)',
+                    border: '1px solid rgba(28,25,23,0.08)',
+                    animation: `pulse 1.5s ease-in-out ${i * 0.15}s infinite`,
+                    height: 510,
+                }} />
+            ))}
+        </div>
     );
 }
 
@@ -66,11 +130,59 @@ function SkeletonCard() {
         <div style={{ background: 'rgba(28,25,23,0.03)', border: '1px solid rgba(28,25,23,0.07)' }}>
             <div style={{ aspectRatio: '16/9', background: 'rgba(28,25,23,0.06)', animation: 'pulse 1.5s ease-in-out infinite' }} />
             <div className="p-4 space-y-2">
-                <div className="h-3.5 w-2/3 rounded-sm" style={{ background: 'rgba(28,25,23,0.08)', animation: 'pulse 1.5s ease-in-out 0.1s infinite' }} />
-                <div className="h-2.5 w-full rounded-sm" style={{ background: 'rgba(28,25,23,0.05)', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
-                <div className="h-2.5 w-4/5 rounded-sm" style={{ background: 'rgba(28,25,23,0.05)', animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
+                <div className="h-3.5 w-2/3" style={{ background: 'rgba(28,25,23,0.08)', animation: 'pulse 1.5s ease-in-out 0.1s infinite' }} />
+                <div className="h-2.5 w-full" style={{ background: 'rgba(28,25,23,0.05)', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
+                <div className="h-2.5 w-4/5" style={{ background: 'rgba(28,25,23,0.05)', animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
             </div>
         </div>
+    );
+}
+
+// ── Scroll indicator ──────────────────────────────────────────────────────────
+function ScrollHint() {
+    const ref = useRef<HTMLDivElement>(null);
+    const [visible, setVisible] = useState(true);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const scroller = el.closest('[data-scroll-track]') as HTMLElement | null;
+        if (!scroller) return;
+        const handler = () => setVisible(scroller.scrollLeft < 20);
+        scroller.addEventListener('scroll', handler, { passive: true });
+        return () => scroller.removeEventListener('scroll', handler);
+    }, []);
+
+    return (
+        <motion.div
+            ref={ref}
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            animate={{ opacity: visible ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <span style={{
+                fontFamily: '"DM Sans", system-ui, sans-serif',
+                fontSize: 10,
+                letterSpacing: '0.12em',
+                color: '#A8A29E',
+                textTransform: 'uppercase',
+            }}>
+                scroll
+            </span>
+            <motion.div
+                style={{ display: 'flex', gap: 2 }}
+                animate={{ x: [0, 5, 0] }}
+                transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+            >
+                {[0, 1, 2].map((i) => (
+                    <div key={i} style={{
+                        width: 3, height: 3, borderRadius: '50%',
+                        background: '#A8A29E',
+                        opacity: 1 - i * 0.3,
+                    }} />
+                ))}
+            </motion.div>
+        </motion.div>
     );
 }
 
@@ -108,70 +220,80 @@ export default function Portfolio() {
                     }}
                 />
 
-                <div className="relative z-10 mx-auto max-w-5xl px-8 sm:px-14 py-14">
+                <div className="relative z-10">
 
-                    {/* ── Header ──────────────────────────────────────────── */}
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="mb-12"
-                    >
-                        <motion.p
-                            variants={itemVariants}
-                            className="text-xs font-medium tracking-[0.4em] uppercase mb-4"
-                            style={{ color: '#A8A29E' }}
-                        >
-                            My Work
-                        </motion.p>
-                        <motion.h1
-                            variants={itemVariants}
-                            style={{
-                                fontFamily: '"DM Serif Display", Georgia, serif',
-                                fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-                                fontWeight: 400,
-                                lineHeight: 1.1,
-                                letterSpacing: '-0.02em',
-                                color: '#1C1917',
-                                marginBottom: '1rem',
-                            }}
-                        >
-                            Portfolio
-                        </motion.h1>
-                        <motion.div variants={itemVariants} className="h-px w-10" style={{ background: 'rgba(28,25,23,0.2)' }} />
-                    </motion.div>
+                    {/* ── Editorial header ─────────────────────────────── */}
+                    <div className="mx-auto px-8 sm:px-16 pt-12" style={{ maxWidth: 1280 }}>
+                        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                            <motion.h1
+                                variants={itemVariants}
+                                style={{
+                                    fontFamily: '"DM Serif Display", Georgia, serif',
+                                    fontSize: 'clamp(3rem, 6vw, 5.5rem)',
+                                    fontWeight: 400,
+                                    fontStyle: 'italic',
+                                    lineHeight: 0.94,
+                                    letterSpacing: '-0.03em',
+                                    color: '#1C1917',
+                                    marginBottom: '1.1rem',
+                                }}
+                            >
+                                projects built with purpose.
+                            </motion.h1>
+
+                            {/* Full-width rule */}
+                            <motion.div
+                                variants={itemVariants}
+                                style={{
+                                    height: 1,
+                                    background: 'linear-gradient(to right, rgba(28,25,23,0.22) 0%, rgba(28,25,23,0.08) 60%, transparent 100%)',
+                                }}
+                            />
+                        </motion.div>
+                    </div>
 
                     {error && (
-                        <p className="text-sm mb-8" style={{ color: '#A8A29E' }}>
-                            Could not load projects — {error}
-                        </p>
+                        <div className="mx-auto px-8 sm:px-16 mt-4" style={{ maxWidth: 1280 }}>
+                            <p className="text-sm" style={{ color: '#A8A29E' }}>Could not load projects — {error}</p>
+                        </div>
                     )}
 
-                    {/* ── Featured carousel ────────────────────────────────── */}
+                    {/* ── Featured — full width hero ────────────────────── */}
                     {(loading || featured.length > 0) && (
-                        <FadeUp className="mb-16">
-                            <SectionLabel label="Featured" />
-                            {loading ? <SkeletonCarousel /> : <ElegantCarousel items={featured} />}
+                        <FadeUp>
+                            {/* Section marker */}
+                            <div className="mx-auto px-8 sm:px-16 mt-10 mb-0" style={{ maxWidth: 1280 }}>
+                                <SectionMarker
+                                    index="01."
+                                    label="Featured"
+                                    hint={featured.length > 0 ? `${featured.length} projects` : undefined}
+                                />
+                            </div>
+
+                            {loading
+                                ? <SkeletonCarousel />
+                                : <ProjectShowcaseCarousel items={featured} />
+                            }
                         </FadeUp>
                     )}
 
-                    {/* ── All projects ─────────────────────────────────────── */}
-                    <div>
+                    {/* ── All projects ──────────────────────────────────── */}
+                    <div className="mx-auto px-8 sm:px-16 pb-20 mt-2" style={{ maxWidth: 1280 }}>
                         <FadeUp>
-                            <SectionLabel label="All Projects" />
+                            <SectionMarker index="02." label="All Projects" />
                         </FadeUp>
 
-                        {loading && (
-                            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-                                {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)}
-                            </div>
-                        )}
-
-                        {!loading && !error && <ProjectCards items={all} />}
-
-                        {!loading && !error && all.length === 0 && (
-                            <p className="text-sm mt-6" style={{ color: '#A8A29E' }}>No projects yet.</p>
-                        )}
+                        <div className="mt-6">
+                            {loading && (
+                                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                                    {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)}
+                                </div>
+                            )}
+                            {!loading && !error && <ProjectCards items={all} />}
+                            {!loading && !error && all.length === 0 && (
+                                <p className="text-sm mt-6" style={{ color: '#A8A29E' }}>No projects yet.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
