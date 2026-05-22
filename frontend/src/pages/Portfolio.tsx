@@ -190,7 +190,7 @@ export default function Portfolio() {
                                     marginBottom: '1.1rem',
                                 }}
                             >
-                                projects built with purpose.
+                                Built with Purpose.
                             </motion.h1>
 
                             {/* Full-width rule */}
