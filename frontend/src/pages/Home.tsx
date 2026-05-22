@@ -108,7 +108,7 @@ const Home = () => {
                         className="text-xs font-medium tracking-[0.4em] uppercase mb-10"
                         style={{ color: '#A8A29E' }}
                     >
-                        Portfolio — 2025
+                        Portfolio
                     </motion.p>
 
                     {/* Display name */}

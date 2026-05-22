@@ -1,72 +1,58 @@
 import { useState } from 'react';
+import { motion, MotionConfig } from 'framer-motion';
+import { MailIcon, MapPinIcon, LinkIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { ContactCard } from '../components/ui/contact-card';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { Label } from '../components/ui/label';
 
-interface FormState {
-    name: string;
-    email: string;
-    subject: string;
-    message: string;
-}
+// ── Timing ────────────────────────────────────────────────────────────────────
+const STRONG_EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const ITEM_DURATION_S = 0.45;
 
-type Status = 'idle' | 'loading' | 'success' | 'error';
-
-// ---------------------------------------------------------------------------
-// Input / Textarea base styles
-// ---------------------------------------------------------------------------
-const fieldBase: React.CSSProperties = {
-    width: '100%',
-    background: 'rgba(200,216,255,0.04)',
-    border: '1px solid rgba(200,216,255,0.12)',
-    borderRadius: '12px',
-    padding: '12px 16px',
-    color: '#e8eeff',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.2s ease, background 0.2s ease',
+// ── Warm monochrome tokens ────────────────────────────────────────────────────
+const COLOR = {
+    bg:      '#F7F5F0',
+    text:    '#1C1917',
+    muted:   '#78716C',
+    label:   '#A8A29E',
+    border:  'rgba(28,25,23,0.1)',
 };
 
+// ── Form field wrapper ────────────────────────────────────────────────────────
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
-        <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#6b7fa3' }}>
-                {label}
-            </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <Label>{label}</Label>
             {children}
         </div>
     );
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+// ── Contact info data ─────────────────────────────────────────────────────────
+const CONTACT_INFO = [
+    { icon: MailIcon,   label: 'Email',          value: 'jsmoon416@gmail.com' },
+    { icon: MapPinIcon, label: 'Location',        value: 'Boston, MA · Honolulu, HI' },
+    { icon: LinkIcon,   label: 'GitHub',          value: 'github.com/joonseomoon' },
+];
+
+type Status = 'idle' | 'loading' | 'success' | 'error';
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function Contact() {
-    const [form, setForm] = useState<FormState>({ name: '', email: '', subject: '', message: '' });
-    const [status, setStatus] = useState<Status>('idle');
+    const [form, setForm]       = useState({ name: '', email: '', subject: '', message: '' });
+    const [status, setStatus]   = useState<Status>('idle');
     const [errorMsg, setErrorMsg] = useState('');
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    };
-
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        e.currentTarget.style.borderColor = 'rgba(200,216,255,0.35)';
-        e.currentTarget.style.background = 'rgba(200,216,255,0.07)';
-    };
-
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        e.currentTarget.style.borderColor = 'rgba(200,216,255,0.12)';
-        e.currentTarget.style.background = 'rgba(200,216,255,0.04)';
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('loading');
         setErrorMsg('');
-
-        const { error } = await supabase.functions.invoke('send-contact-email', {
-            body: form,
-        });
-
+        const { error } = await supabase.functions.invoke('send-contact-email', { body: form });
         if (error) {
             setStatus('error');
             setErrorMsg(error.message ?? 'Something went wrong. Please try again.');
@@ -77,165 +63,131 @@ export default function Contact() {
     };
 
     return (
-        <div className="flex-1 overflow-y-auto" style={{ background: '#03030f' }}>
-
-            {/* Deep-space gradient */}
+        <MotionConfig reducedMotion="user">
             <div
-                className="fixed inset-0 pointer-events-none"
-                style={{
-                    background: 'radial-gradient(ellipse 80% 50% at 50% 0%, #0b0b2e 0%, #03030f 65%)',
-                    zIndex: 0,
-                }}
-            />
+                className="flex-1 overflow-y-auto relative"
+                style={{ background: COLOR.bg, fontFamily: '"DM Sans", system-ui, sans-serif' }}
+            >
+                {/* Grain overlay */}
+                <div
+                    className="fixed inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'repeat', backgroundSize: '160px',
+                        opacity: 0.025, mixBlendMode: 'multiply',
+                    }}
+                />
 
-            <div className="relative z-10 mx-auto max-w-xl px-6 py-16">
+                <div
+                    className="relative z-10 flex items-center"
+                    style={{ minHeight: '100%', padding: 'max(5vh, 32px) max(5vw, 32px)' }}
+                >
 
-                {/* Header */}
-                <div className="mb-12 text-center">
-                    <p className="text-xs font-semibold tracking-[0.35em] uppercase mb-3" style={{ color: '#6b7fa3' }}>
-                        Get in touch
-                    </p>
-                    <h1
-                        className="text-4xl sm:text-5xl font-bold"
-                        style={{
-                            background: 'linear-gradient(135deg, #e8eeff 0%, #c8d8ff 45%, #a5b4fc 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            filter: 'drop-shadow(0 0 18px rgba(165,180,252,0.3))',
-                        }}
+                    {/* ── Contact card ─────────────────────────────── */}
+                    <motion.div
+                        style={{ width: '100%', maxWidth: 1100, margin: '0 auto' }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0, transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT, delay: 0.1 } }}
                     >
-                        Contact
-                    </h1>
-                    <div
-                        className="mx-auto mt-5 h-px w-16"
-                        style={{ background: 'linear-gradient(to right, transparent, rgba(200,216,255,0.4), transparent)' }}
-                    />
-                    <p className="mt-5 text-sm leading-relaxed" style={{ color: '#6b7fa3' }}>
-                        Have a question or want to work together? Send me a message and I'll get back to you.
-                    </p>
+                        <ContactCard
+                            title="Get in touch"
+                            description="Have a question, a project idea, or just want to say hello? Fill out the form and I'll get back to you."
+                            contactInfo={CONTACT_INFO}
+                        >
+                            {/* ── Success state ── */}
+                            {status === 'success' ? (
+                                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '32px 0', textAlign: 'center' }}>
+                                    <div style={{
+                                        width: 44, height: 44, borderRadius: '50%',
+                                        background: 'rgba(28,25,23,0.06)',
+                                        border: `1px solid ${COLOR.border}`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <path d="M3 8l3.5 3.5L13 4.5" stroke="#1C1917" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <p style={{ fontFamily: '"DM Serif Display", Georgia, serif', fontSize: '1.1rem', fontStyle: 'italic', color: COLOR.text }}>
+                                        Message sent.
+                                    </p>
+                                    <p style={{ fontSize: 12, color: COLOR.label, maxWidth: '22ch', lineHeight: 1.6 }}>
+                                        Thanks for reaching out — I'll be in touch soon.
+                                    </p>
+                                    <button
+                                        onClick={() => setStatus('idle')}
+                                        className="contact-reset-btn"
+                                        style={{
+                                            marginTop: 8, fontSize: 11, letterSpacing: '0.08em',
+                                            color: COLOR.label, background: 'none', border: 'none',
+                                            cursor: 'pointer', fontFamily: '"DM Sans", system-ui, sans-serif',
+                                        }}
+                                    >
+                                        Send another →
+                                    </button>
+                                </div>
+                            ) : (
+                                /* ── Form ── */
+                                <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                        <Field label="Name">
+                                            <Input
+                                                type="text" name="name"
+                                                value={form.name} onChange={handleChange}
+                                                placeholder="Joonseo Moon" required
+                                            />
+                                        </Field>
+                                        <Field label="Email">
+                                            <Input
+                                                type="email" name="email"
+                                                value={form.email} onChange={handleChange}
+                                                placeholder="you@example.com" required
+                                            />
+                                        </Field>
+                                    </div>
+
+                                    <Field label="Subject">
+                                        <Input
+                                            type="text" name="subject"
+                                            value={form.subject} onChange={handleChange}
+                                            placeholder="What's this about?" required
+                                        />
+                                    </Field>
+
+                                    <Field label="Message">
+                                        <Textarea
+                                            name="message"
+                                            value={form.message} onChange={handleChange}
+                                            placeholder="Your message..." required rows={5}
+                                        />
+                                    </Field>
+
+                                    {status === 'error' && (
+                                        <p style={{ fontSize: 12, color: '#b45309' }}>{errorMsg}</p>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={status === 'loading'}
+                                        className="contact-submit-btn"
+                                        style={{
+                                            width: '100%', padding: '10px 0',
+                                            background: COLOR.text, color: COLOR.bg,
+                                            border: 'none', borderRadius: 10,
+                                            fontSize: 12, letterSpacing: '0.1em',
+                                            fontFamily: '"DM Sans", system-ui, sans-serif',
+                                            fontWeight: 500, textTransform: 'uppercase',
+                                            cursor: status === 'loading' ? 'not-allowed' : 'pointer',
+                                            opacity: status === 'loading' ? 0.6 : 1,
+                                        }}
+                                    >
+                                        {status === 'loading' ? 'Sending…' : 'Send message'}
+                                    </button>
+                                </form>
+                            )}
+                        </ContactCard>
+                    </motion.div>
                 </div>
-
-                {/* Success state */}
-                {status === 'success' ? (
-                    <div
-                        className="rounded-2xl p-8 text-center"
-                        style={{
-                            background: 'rgba(200,216,255,0.05)',
-                            border: '1px solid rgba(200,216,255,0.15)',
-                        }}
-                    >
-                        <div
-                            className="mx-auto mb-4 flex items-center justify-center rounded-full"
-                            style={{ width: '48px', height: '48px', background: 'rgba(200,216,255,0.1)', border: '1px solid rgba(200,216,255,0.2)' }}
-                        >
-                            <span style={{ color: '#c8d8ff', fontSize: '20px' }}>✓</span>
-                        </div>
-                        <h2 className="text-lg font-semibold mb-2" style={{ color: '#e8eeff' }}>Message sent</h2>
-                        <p className="text-sm" style={{ color: '#6b7fa3' }}>Thanks for reaching out — I'll be in touch soon.</p>
-                        <button
-                            onClick={() => setStatus('idle')}
-                            className="mt-6 text-sm cursor-pointer transition-colors duration-200"
-                            style={{ color: '#6b7fa3' }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#c8d8ff'; }}
-                            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#6b7fa3'; }}
-                        >
-                            Send another message
-                        </button>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                        {/* Name + Email row */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <Field label="Name">
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={form.name}
-                                    onChange={handleChange}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                    placeholder="Joonseo Moon"
-                                    required
-                                    style={fieldBase}
-                                />
-                            </Field>
-                            <Field label="Email">
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                    placeholder="you@example.com"
-                                    required
-                                    style={fieldBase}
-                                />
-                            </Field>
-                        </div>
-
-                        <Field label="Subject">
-                            <input
-                                type="text"
-                                name="subject"
-                                value={form.subject}
-                                onChange={handleChange}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
-                                placeholder="What's this about?"
-                                required
-                                style={fieldBase}
-                            />
-                        </Field>
-
-                        <Field label="Message">
-                            <textarea
-                                name="message"
-                                value={form.message}
-                                onChange={handleChange}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
-                                placeholder="Your message..."
-                                required
-                                rows={6}
-                                style={{ ...fieldBase, resize: 'vertical' }}
-                            />
-                        </Field>
-
-                        {/* Error */}
-                        {status === 'error' && (
-                            <p className="text-sm" style={{ color: '#f87171' }}>
-                                {errorMsg}
-                            </p>
-                        )}
-
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={status === 'loading'}
-                            className="w-full py-3 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{
-                                background: '#c8d8ff',
-                                color: '#03030f',
-                                boxShadow: '0 0 24px rgba(200,216,255,0.2)',
-                            }}
-                            onMouseEnter={(e) => {
-                                if (status !== 'loading') {
-                                    (e.currentTarget as HTMLButtonElement).style.background = '#e8eeff';
-                                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 32px rgba(200,216,255,0.35)';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLButtonElement).style.background = '#c8d8ff';
-                                (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 24px rgba(200,216,255,0.2)';
-                            }}
-                        >
-                            {status === 'loading' ? 'Sending...' : 'Send Message'}
-                        </button>
-                    </form>
-                )}
             </div>
-        </div>
+        </MotionConfig>
     );
 }

@@ -101,8 +101,7 @@ function FadeUp({ children, delay = 0, className, style }: {
 // ── Portrait + stats (right column) ──────────────────────────────────────────
 const stats = [
     { value: '2+', label: 'Years building' },
-    { value: '10+', label: 'Projects shipped' },
-    { value: 'BU', label: 'Hack4Impact' },
+    { value: 'BU', label: 'Computer Engineering' },
 ];
 
 function PortraitColumn() {
@@ -115,60 +114,16 @@ function PortraitColumn() {
                     height: '340px',
                     border: '1px solid rgba(28,25,23,0.2)',
                     boxShadow: '6px 6px 0px rgba(28,25,23,0.07)',
-                    background: 'rgba(28,25,23,0.045)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '14px',
-                    position: 'relative',
                     overflow: 'hidden',
+                    flexShrink: 0,
                 }}
             >
-                {/* Subtle crosshatch fill so it reads as a real frame */}
-                <svg
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06 }}
-                    aria-hidden="true"
-                >
-                    <defs>
-                        <pattern id="hatch" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)">
-                            <line x1="0" y1="0" x2="0" y2="12" stroke="#1C1917" strokeWidth="1" />
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#hatch)" />
-                </svg>
-
-                {/* Corner accents */}
-                {[
-                    { top: 10, left: 10 },
-                    { top: 10, right: 10 },
-                    { bottom: 10, left: 10 },
-                    { bottom: 10, right: 10 },
-                ].map((pos, i) => (
-                    <span key={i} style={{
-                        position: 'absolute', width: 16, height: 16,
-                        borderTop:    'top'    in pos ? '1.5px solid rgba(28,25,23,0.35)' : undefined,
-                        borderBottom: 'bottom' in pos ? '1.5px solid rgba(28,25,23,0.35)' : undefined,
-                        borderLeft:   'left'   in pos ? '1.5px solid rgba(28,25,23,0.35)' : undefined,
-                        borderRight:  'right'  in pos ? '1.5px solid rgba(28,25,23,0.35)' : undefined,
-                        ...pos,
-                    }} />
-                ))}
-
-                {/* Person silhouette — larger so it clearly reads as a photo placeholder */}
-                <svg width="80" height="88" viewBox="0 0 80 88" fill="none" aria-hidden="true">
-                    <circle cx="40" cy="28" r="18" stroke="rgba(28,25,23,0.25)" strokeWidth="1.5" fill="rgba(28,25,23,0.06)" />
-                    <path d="M4 84c0-19.882 16.118-36 36-36s36 16.118 36 36" stroke="rgba(28,25,23,0.25)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                </svg>
-
-                <div style={{ textAlign: 'center', position: 'relative' }}>
-                    <p style={{ fontSize: '9px', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(28,25,23,0.4)', lineHeight: 1.8 }}>
-                        Your photo here
-                    </p>
-                    <p style={{ fontSize: '9px', letterSpacing: '0.12em', color: 'rgba(28,25,23,0.25)', marginTop: 2 }}>
-                        260 × 340 px
-                    </p>
-                </div>
+                <img
+                    src="/profile.jpg"
+                    alt="Joonseo Moon"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+                    draggable={false}
+                />
             </div>
 
             {/* Stats below the image */}
