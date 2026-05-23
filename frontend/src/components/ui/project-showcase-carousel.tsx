@@ -274,19 +274,6 @@ function ProjectCard({ item, index, cardW }: { item: IPortfolioItem; index: numb
                                 alt={item.title}
                                 className="w-full h-full object-cover select-none img-hover-transition"
                                 draggable={false}
-                                style={{
-                                    filter: "saturate(0.65) sepia(0.18) brightness(0.96)",
-                                }}
-                                onMouseEnter={(e) => {
-                                    const img = e.currentTarget as HTMLImageElement;
-                                    img.style.filter = "saturate(0.88) sepia(0.06) brightness(1)";
-                                    img.style.transform = "scale(1.05)";
-                                }}
-                                onMouseLeave={(e) => {
-                                    const img = e.currentTarget as HTMLImageElement;
-                                    img.style.filter = "saturate(0.65) sepia(0.18) brightness(0.96)";
-                                    img.style.transform = "scale(1)";
-                                }}
                             />
                         </div>
                         {/* Gradient bleed into card body */}

@@ -41,7 +41,11 @@
 }
 
 .img-hover-transition {
+    filter: none;
     transition: filter 0.45s ease, transform 0.45s ease;
+}
+.img-hover-transition:hover {
+    transform: scale(1.05);
 }
 
 .exp-company-link {
