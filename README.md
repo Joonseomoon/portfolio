@@ -104,14 +104,17 @@ All data is managed through the [Supabase Table Editor](https://supabase.com/das
 
 ### `portfolio_items`
 
-| Column      | Type    | Required | Notes                          |
-|-------------|---------|----------|--------------------------------|
-| id          | uuid    | auto     | Primary key                    |
-| title       | text    | yes      |                                |
-| description | text    | yes      |                                |
-| image_url   | text    | yes      | Project screenshot URL         |
-| icon_urls   | text[]  | no       | Tech stack icon URLs           |
-| featured    | boolean | yes      | Shows in carousel if true      |
+| Column        | Type    | Required | Notes                                                        |
+|---------------|---------|----------|---------------------------------------------------------------|
+| id            | uuid    | auto     | Primary key                                                   |
+| title         | text    | yes      |                                                                |
+| description   | text    | yes      |                                                                |
+| image_url     | text    | yes      | Project screenshot URL                                        |
+| icon_urls     | text[]  | no       | Tech stack icon URLs                                          |
+| featured      | boolean | yes      | Shows in carousel if true                                     |
+| featured_text | text    | no       | Overrides `description` in the featured carousel when set     |
+| project_url   | text    | no       | Live deployment URL — renders as a link button on the card    |
+| github_url    | text    | no       | GitHub repo URL — renders as a link button on the card        |
 
 ### `skills`
 
@@ -187,7 +190,6 @@ Place your photo at `frontend/public/profile.jpg`. The About page displays it at
 
 ## Future Development Notes
 
-- **Portfolio item links** — add `project_url` / `github_url` columns to `portfolio_items` and render as icon buttons on each card.
 - **Experience company logos** — add a `logo_url` column to `experiences` and display logos on the timeline.
 - **Custom email domain** — verify a domain in Resend to send contact emails from a personal address instead of `onboarding@resend.dev`.
 - **Admin UI** — a protected `/admin` page backed by Supabase Auth for managing content without the Supabase dashboard.

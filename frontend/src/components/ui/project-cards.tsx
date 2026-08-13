@@ -3,25 +3,22 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ExternalLink, Code2 } from "lucide-react";
 import type { IPortfolioItem } from "../../api";
+import { ProjectDetailPanel } from "./project-detail-panel";
 
 // ── Timing constants ──────────────────────────────────────────────────────────
-const STRONG_EASE_OUT = [0.23, 1, 0.32, 1] as const;
 const IMG_HOVER_DURATION_S = 0.45;
 const CARD_SPRING = { type: 'spring' as const, stiffness: 400, damping: 28 };
 
 // ── Warm monochrome tokens ────────────────────────────────────────────────────
 const COLOR = {
-    bg:          '#F7F5F0',
     card:        'rgba(28,25,23,0.03)',
     cardHover:   'rgba(28,25,23,0.06)',
     border:      'rgba(28,25,23,0.09)',
     borderHover: 'rgba(28,25,23,0.2)',
     text:        '#1C1917',
     muted:       '#78716C',
-    label:       '#A8A29E',
-    backdrop:    'rgba(247,245,240,0.88)',
 };
 
 interface ProjectCardsProps {
@@ -56,22 +53,6 @@ export function ProjectCards({ items }: ProjectCardsProps) {
         const t = setTimeout(() => setIsLoaded(true), 80);
         return () => clearTimeout(t);
     }, []);
-
-    // Lock body scroll (same approach as featured carousel) + Escape to close
-    useEffect(() => {
-        if (!selectedItem) return;
-        const scrollY = window.scrollY;
-        document.body.style.cssText = `position:fixed;top:-${scrollY}px;width:100%;overflow:hidden`;
-        document.body.dataset.scrollY = String(scrollY);
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedItem(null); };
-        window.addEventListener('keydown', handler);
-        return () => {
-            const sy = parseInt(document.body.dataset.scrollY ?? '0', 10);
-            document.body.style.cssText = '';
-            window.scrollTo({ top: sy, behavior: 'instant' as ScrollBehavior });
-            window.removeEventListener('keydown', handler);
-        };
-    }, [selectedItem]);
 
     if (items.length === 0) return null;
 
@@ -132,6 +113,51 @@ export function ProjectCards({ items }: ProjectCardsProps) {
                                         Featured
                                     </div>
                                 )}
+
+                                {(item.project_url || item.github_url) && (
+                                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                                        {item.project_url && (
+                                            <a
+                                                href={item.project_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="project-link-icon-btn flex items-center justify-center"
+                                                style={{
+                                                    width: 26, height: 26, borderRadius: '50%',
+                                                    background: 'rgba(247,245,240,0.92)',
+                                                    border: '1px solid rgba(28,25,23,0.14)',
+                                                    color: '#57534E',
+                                                    backdropFilter: 'blur(6px)',
+                                                }}
+                                                aria-label="View live project"
+                                                title="View live project"
+                                            >
+                                                <ExternalLink size={12} />
+                                            </a>
+                                        )}
+                                        {item.github_url && (
+                                            <a
+                                                href={item.github_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="project-link-icon-btn flex items-center justify-center"
+                                                style={{
+                                                    width: 26, height: 26, borderRadius: '50%',
+                                                    background: 'rgba(247,245,240,0.92)',
+                                                    border: '1px solid rgba(28,25,23,0.14)',
+                                                    color: '#57534E',
+                                                    backdropFilter: 'blur(6px)',
+                                                }}
+                                                aria-label="View source on GitHub"
+                                                title="View source on GitHub"
+                                            >
+                                                <Code2 size={12} />
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Body */}
@@ -182,135 +208,12 @@ export function ProjectCards({ items }: ProjectCardsProps) {
             </motion.div>
 
             {createPortal(
-            <AnimatePresence>
-                {selectedItem && (
-                    <div
-                        className="fixed inset-0 z-50 overflow-y-auto"
-                        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '5vh 1.5rem 2rem' }}
-                    >
-                        {/* Backdrop — covers navbar */}
-                        <motion.div
-                            className="absolute inset-0"
-                            style={{ background: COLOR.backdrop, backdropFilter: 'blur(12px)' }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedItem(null)}
-                        />
-
-                        {/* Content-sized panel */}
-                        <motion.div
-                            className="relative z-10 w-full overflow-hidden"
-                            style={{
-                                maxWidth: 760,
-                                background: COLOR.bg,
-                                borderRadius: 20,
-                                border: '1px solid rgba(28,25,23,0.12)',
-                                boxShadow: '0 40px 100px rgba(28,25,23,0.18), 0 8px 24px rgba(28,25,23,0.1)',
-                            }}
-                            initial={{ opacity: 0, scale: 0.92, y: 24 }}
-                            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.38, ease: STRONG_EASE_OUT } }}
-                            exit={{ opacity: 0, scale: 0.95, y: 12, transition: { duration: 0.22, ease: 'easeIn' } }}
-                        >
-                            {/* Close */}
-                            <motion.button
-                                className="absolute top-4 right-4 z-20 flex items-center justify-center cursor-pointer"
-                                style={{
-                                    width: 34, height: 34,
-                                    background: 'rgba(247,245,240,0.95)',
-                                    backdropFilter: 'blur(8px)',
-                                    border: '1px solid rgba(28,25,23,0.18)',
-                                    color: COLOR.text,
-                                    borderRadius: '50%',
-                                    boxShadow: '0 2px 8px rgba(28,25,23,0.14)',
-                                }}
-                                initial={{ opacity: 0, scale: 0.7 }}
-                                animate={{ opacity: 1, scale: 1, transition: { delay: 0.18 } }}
-                                whileHover={{ backgroundColor: 'rgba(237,232,222,0.98)' }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => setSelectedItem(null)}
-                                aria-label="Close"
-                            >
-                                <X size={14} />
-                            </motion.button>
-
-                            <div style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-                                {/* Hero image */}
-                                <div
-                                    className="relative w-full overflow-hidden"
-                                    style={{ aspectRatio: '16/9', borderRadius: '20px 20px 0 0' }}
-                                >
-                                    <img
-                                        src={selectedItem.image_url}
-                                        alt={selectedItem.title}
-                                        className="w-full h-full object-cover select-none"
-                                        draggable={false}
-                                    />
-                                </div>
-
-                                {/* Content */}
-                                <div className="p-7 sm:p-9">
-                                    <motion.h2
-                                        className="mb-4"
-                                        style={{
-                                            fontFamily: '"DM Serif Display", Georgia, serif',
-                                            fontSize: 'clamp(1.5rem, 3vw, 2.2rem)',
-                                            fontWeight: 400,
-                                            fontStyle: 'italic',
-                                            lineHeight: 1.1,
-                                            letterSpacing: '-0.02em',
-                                            color: COLOR.text,
-                                            textTransform: 'lowercase',
-                                        }}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0, transition: { delay: 0.18, duration: 0.36, ease: STRONG_EASE_OUT } }}
-                                    >
-                                        {selectedItem.title}.
-                                    </motion.h2>
-
-                                    <motion.p
-                                        className="text-sm leading-[1.8] mb-6"
-                                        style={{ color: COLOR.muted, maxWidth: '60ch', fontFamily: '"DM Sans", system-ui, sans-serif' }}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0, transition: { delay: 0.24, duration: 0.36, ease: STRONG_EASE_OUT } }}
-                                    >
-                                        {selectedItem.description}
-                                    </motion.p>
-
-                                    {selectedItem.icon_urls.length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 8 }}
-                                            animate={{ opacity: 1, y: 0, transition: { delay: 0.32, duration: 0.32, ease: STRONG_EASE_OUT } }}
-                                        >
-                                            <p style={{
-                                                fontFamily: '"DM Sans", system-ui, sans-serif',
-                                                fontSize: 9,
-                                                letterSpacing: '0.24em',
-                                                textTransform: 'uppercase',
-                                                color: COLOR.label,
-                                                marginBottom: 10,
-                                            }}>
-                                                Stack
-                                            </p>
-                                            <div className="flex items-center gap-3 flex-wrap">
-                                                {selectedItem.icon_urls.map((url, i) => (
-                                                    <img
-                                                        key={i} src={url} alt="" draggable={false}
-                                                        className="w-6 h-6 object-contain"
-                                                        style={{ opacity: 0.7 }}
-                                                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>,
-            document.body
+                <AnimatePresence>
+                    {selectedItem && (
+                        <ProjectDetailPanel item={selectedItem} onClose={() => setSelectedItem(null)} />
+                    )}
+                </AnimatePresence>,
+                document.body
             )}
         </>
     );
