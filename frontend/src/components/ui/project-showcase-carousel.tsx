@@ -1,26 +1,11 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Code2, ExternalLink } from "lucide-react";
 import type { IPortfolioItem } from "../../api";
-
-// ── Outside-click hook ────────────────────────────────────────────────────────
-function useOutsideClick(ref: React.RefObject<HTMLDivElement | null>, cb: () => void) {
-    useEffect(() => {
-        const handler = (e: MouseEvent | TouchEvent) => {
-            if (!ref.current || ref.current.contains(e.target as Node)) return;
-            cb();
-        };
-        document.addEventListener("mousedown", handler);
-        document.addEventListener("touchstart", handler);
-        return () => {
-            document.removeEventListener("mousedown", handler);
-            document.removeEventListener("touchstart", handler);
-        };
-    }, [ref, cb]);
-}
+import { ProjectDetailPanel } from "./project-detail-panel";
 
 // ── Card dimensions ───────────────────────────────────────────────────────────
 const CARD_W_MAX = 500;
@@ -37,9 +22,6 @@ const CARD_HOVER_DURATION_S = 0.36;
 // ── Tilt angles for pinboard feel ────────────────────────────────────────────
 const TILTS = [1.8, -1.4, 2.2, -1.9, 1.2, -2.4, 1.6, -1.1];
 
-// ── Warm accent dots cycling per card ────────────────────────────────────────
-const ACCENTS = ["#8C7355", "#7A6E63", "#9E8B78", "#6B6258"];
-
 // ── Short teaser from description ─────────────────────────────────────────────
 function teaser(desc: string, max = 88): string {
     if (desc.length <= max) return desc;
@@ -49,189 +31,41 @@ function teaser(desc: string, max = 88): string {
     return cut.slice(0, cut.lastIndexOf(" ")) + "…";
 }
 
-// ── Expanded panel ────────────────────────────────────────────────────────────
-function ExpandedPanel({ item, onClose }: { item: IPortfolioItem; onClose: () => void }) {
-    const ref = useRef<HTMLDivElement>(null);
-    useOutsideClick(ref, onClose);
-
-    useEffect(() => {
-        const scrollY = window.scrollY;
-        document.body.style.cssText = `position:fixed;top:-${scrollY}px;width:100%;overflow:hidden`;
-        document.body.dataset.scrollY = String(scrollY);
-        const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-        window.addEventListener("keydown", handler);
-        return () => {
-            const sy = parseInt(document.body.dataset.scrollY ?? "0", 10);
-            document.body.style.cssText = "";
-            window.scrollTo({ top: sy, behavior: "instant" as ScrollBehavior });
-            window.removeEventListener("keydown", handler);
-        };
-    }, [onClose]);
-
-    return (
-        <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "5vh 1rem 2rem" }}
-        >
-            {/* Backdrop */}
-            <motion.div
-                className="absolute inset-0"
-                style={{ background: "rgba(247,245,240,0.92)", backdropFilter: "blur(14px)" }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-            />
-
-            {/* Panel */}
-            <motion.div
-                ref={ref}
-                className="relative z-10 w-full overflow-hidden"
-                style={{
-                    maxWidth: 760,
-                    background: "#F7F5F0",
-                    border: "1px solid rgba(28,25,23,0.12)",
-                    boxShadow: "0 40px 100px rgba(28,25,23,0.18), 0 8px 24px rgba(28,25,23,0.1)",
-                    borderRadius: 20,
-                }}
-                initial={{ opacity: 0, scale: 0.92, y: 24 }}
-                animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.38, ease: [0.23, 1, 0.32, 1] } }}
-                exit={{ opacity: 0, scale: 0.95, y: 12, transition: { duration: 0.22, ease: "easeIn" } }}
-            >
-                {/* Close button */}
-                <motion.button
-                    className="absolute top-4 right-4 z-20 flex items-center justify-center cursor-pointer"
-                    style={{
-                        width: 34, height: 34,
-                        background: "rgba(247,245,240,0.95)",
-                        backdropFilter: "blur(8px)",
-                        color: "#1C1917",
-                        borderRadius: "50%",
-                        border: "1px solid rgba(28,25,23,0.18)",
-                        boxShadow: "0 2px 8px rgba(28,25,23,0.14)",
-                    }}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1, transition: { delay: 0.18 } }}
-                    whileHover={{ backgroundColor: "rgba(237,232,222,0.98)" }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={onClose}
-                    aria-label="Close"
-                >
-                    <X size={14} />
-                </motion.button>
-
-                {/* Scrollable content */}
-                <div style={{ maxHeight: "80vh", overflowY: "auto" }}>
-                    {/* Hero screenshot */}
-                    <div style={{ aspectRatio: "16/9", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
-                        <img
-                            src={item.image_url}
-                            alt={item.title}
-                            className="w-full h-full object-cover select-none"
-                            draggable={false}
-                        />
-                    </div>
-
-                    {/* Content area */}
-                    <div style={{ padding: "28px 36px 36px" }}>
-                        {/* Featured badge */}
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 18 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#8C7355" }} />
-                            <p style={{
-                                fontFamily: '"DM Sans", system-ui, sans-serif',
-                                fontSize: 10,
-                                letterSpacing: "0.24em",
-                                textTransform: "uppercase",
-                                color: "#8C7355",
-                            }}>
-                                Featured Project
-                            </p>
-                        </div>
-
-                        <h2
-                            style={{
-                                fontFamily: '"DM Serif Display", Georgia, serif',
-                                fontSize: "clamp(1.6rem, 3.5vw, 2.4rem)",
-                                fontWeight: 400,
-                                fontStyle: "italic",
-                                lineHeight: 1.1,
-                                letterSpacing: "-0.02em",
-                                color: "#1C1917",
-                                textTransform: "lowercase",
-                                marginBottom: "1rem",
-                            }}
-                        >
-                            {item.title}
-                        </h2>
-
-                        <motion.p
-                            style={{
-                                fontFamily: '"DM Sans", system-ui, sans-serif',
-                                fontSize: "0.875rem",
-                                lineHeight: 1.8,
-                                color: "#57534E",
-                                maxWidth: "58ch",
-                                marginBottom: "1.5rem",
-                            }}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0, transition: { delay: 0.22, duration: 0.36 } }}
-                        >
-                            {item.description}
-                        </motion.p>
-
-                        {item.icon_urls.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0, transition: { delay: 0.32, duration: 0.32 } }}
-                            >
-                                <p style={{
-                                    fontFamily: '"DM Sans", system-ui, sans-serif',
-                                    fontSize: 9,
-                                    letterSpacing: "0.24em",
-                                    textTransform: "uppercase",
-                                    color: "#A8A29E",
-                                    marginBottom: 10,
-                                }}>
-                                    Stack
-                                </p>
-                                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                                    {item.icon_urls.map((url, i) => (
-                                        <img
-                                            key={i} src={url} alt=""
-                                            style={{ width: 24, height: 24, objectFit: "contain", opacity: 0.7 }}
-                                            draggable={false}
-                                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                                        />
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </div>
-                </div>
-            </motion.div>
-        </div>
-    );
+// ── Split the leading action word off featured_text so it can be emphasized ────
+function splitFirstWord(text: string): { firstWord: string; rest: string } {
+    const trimmed = text.trim();
+    const spaceIndex = trimmed.indexOf(" ");
+    if (spaceIndex === -1) return { firstWord: trimmed, rest: "" };
+    return { firstWord: trimmed.slice(0, spaceIndex), rest: trimmed.slice(spaceIndex) };
 }
 
 // ── Individual parchment card ─────────────────────────────────────────────────
 function ProjectCard({ item, index, cardW }: { item: IPortfolioItem; index: number; cardW: number }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const tilt = TILTS[index % TILTS.length];
-    const accent = ACCENTS[index % ACCENTS.length];
     const handleClose = useCallback(() => setIsExpanded(false), []);
     const cardTeaser = teaser(item.description);
+    const featuredWords = item.featured_text ? splitFirstWord(item.featured_text) : null;
 
     return (
         <>
             {createPortal(
                 <AnimatePresence>
-                    {isExpanded && <ExpandedPanel item={item} onClose={handleClose} />}
+                    {isExpanded && <ProjectDetailPanel item={item} onClose={handleClose} />}
                 </AnimatePresence>,
                 document.body
             )}
 
-            <motion.button
+            <motion.div
+                role="button"
+                tabIndex={0}
                 onClick={() => setIsExpanded(true)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setIsExpanded(true);
+                    }
+                }}
                 className="cursor-pointer"
                 style={{
                     rotate: tilt,
@@ -285,59 +119,81 @@ function ProjectCard({ item, index, cardW }: { item: IPortfolioItem; index: numb
 
                     {/* Card content */}
                     <div style={{ padding: "22px 26px 24px", display: "flex", flexDirection: "column", flex: 1 }}>
-                        {/* Accent dot + featured label */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
-                            <div style={{ width: 5, height: 5, borderRadius: "50%", background: accent, flexShrink: 0 }} />
-                            <p style={{
-                                fontFamily: '"DM Sans", system-ui, sans-serif',
-                                fontSize: 9,
-                                letterSpacing: "0.24em",
-                                textTransform: "uppercase",
-                                color: accent,
+                        {item.featured_text ? (
+                            /* Featured text takes over the title + description spot entirely */
+                            <div style={{
+                                flex: "1 1 auto",
+                                marginBottom: "1.1rem",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                textAlign: "center",
                             }}>
-                                Featured
-                            </p>
-                            <div style={{ flex: 1, height: 1, background: `${accent}33` }} />
-                        </div>
+                                <p style={{
+                                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                                    fontSize: "1.85rem",
+                                    fontWeight: 500,
+                                    lineHeight: 1.22,
+                                    letterSpacing: "-0.02em",
+                                    color: "#1C1917",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 4,
+                                    WebkitBoxOrient: "vertical",
+                                    overflow: "hidden",
+                                }}>
+                                    <span style={{
+                                        fontSize: "1.5em",
+                                        fontWeight: 700,
+                                        color: "#8C7355",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.01em",
+                                    }}>
+                                        {featuredWords!.firstWord}
+                                    </span>
+                                    {featuredWords!.rest}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Title */}
+                                <h3 style={{
+                                    fontFamily: '"DM Serif Display", Georgia, serif',
+                                    fontSize: "1.35rem",
+                                    fontWeight: 400,
+                                    lineHeight: 1.18,
+                                    letterSpacing: "-0.018em",
+                                    color: "#1C1917",
+                                    marginBottom: "0.8rem",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    overflow: "hidden",
+                                }}>
+                                    {item.title}
+                                </h3>
 
-                        {/* Title */}
-                        <h3 style={{
-                            fontFamily: '"DM Serif Display", Georgia, serif',
-                            fontSize: "1.35rem",
-                            fontWeight: 400,
-                            fontStyle: "italic",
-                            lineHeight: 1.18,
-                            letterSpacing: "-0.018em",
-                            color: "#1C1917",
-                            textTransform: "lowercase",
-                            marginBottom: "0.8rem",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                        }}>
-                            {item.title}.
-                        </h3>
-
-                        {/* Teaser text */}
-                        <p style={{
-                            fontFamily: '"DM Sans", system-ui, sans-serif',
-                            fontSize: "12px",
-                            lineHeight: 1.75,
-                            color: "rgba(28,25,23,0.54)",
-                            flex: "1 1 auto",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 4,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            marginBottom: "1.1rem",
-                        }}>
-                            {cardTeaser}
-                        </p>
+                                {/* Teaser text */}
+                                <p style={{
+                                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                                    fontSize: "12px",
+                                    lineHeight: 1.75,
+                                    color: "rgba(28,25,23,0.54)",
+                                    flex: "1 1 auto",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 4,
+                                    WebkitBoxOrient: "vertical",
+                                    overflow: "hidden",
+                                    marginBottom: "1.1rem",
+                                }}>
+                                    {cardTeaser}
+                                </p>
+                            </>
+                        )}
 
                         {/* Footer: icons + cta */}
                         <div style={{ borderTop: "1px solid rgba(28,25,23,0.09)", paddingTop: "0.85rem" }}>
-                            {item.icon_urls.length > 0 && (
+                            {!item.featured_text && item.icon_urls.length > 0 && (
                                 <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
                                     {item.icon_urls.slice(0, 6).map((url, i) => (
                                         <img
@@ -347,6 +203,48 @@ function ProjectCard({ item, index, cardW }: { item: IPortfolioItem; index: numb
                                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                                         />
                                     ))}
+                                </div>
+                            )}
+                            {!item.featured_text && (item.project_url || item.github_url) && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+                                    {item.project_url && (
+                                        <a
+                                            href={item.project_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="project-link-icon-btn flex items-center justify-center"
+                                            style={{
+                                                width: 24, height: 24, borderRadius: "50%",
+                                                background: "rgba(28,25,23,0.04)",
+                                                border: "1px solid rgba(28,25,23,0.12)",
+                                                color: "#57534E",
+                                            }}
+                                            aria-label="View live project"
+                                            title="View live project"
+                                        >
+                                            <ExternalLink size={12} />
+                                        </a>
+                                    )}
+                                    {item.github_url && (
+                                        <a
+                                            href={item.github_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="project-link-icon-btn flex items-center justify-center"
+                                            style={{
+                                                width: 24, height: 24, borderRadius: "50%",
+                                                background: "rgba(28,25,23,0.04)",
+                                                border: "1px solid rgba(28,25,23,0.12)",
+                                                color: "#57534E",
+                                            }}
+                                            aria-label="View source on GitHub"
+                                            title="View source on GitHub"
+                                        >
+                                            <Code2 size={12} />
+                                        </a>
+                                    )}
                                 </div>
                             )}
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -370,7 +268,7 @@ function ProjectCard({ item, index, cardW }: { item: IPortfolioItem; index: numb
                         </div>
                     </div>
                 </div>
-            </motion.button>
+            </motion.div>
         </>
     );
 }

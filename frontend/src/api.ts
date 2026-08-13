@@ -18,6 +18,9 @@ export interface IPortfolioItem {
     image_url: string;
     icon_urls: string[];
     featured: boolean;
+    featured_text: string | null;
+    project_url: string | null;
+    github_url: string | null;
     created_at: string;
 }
 
