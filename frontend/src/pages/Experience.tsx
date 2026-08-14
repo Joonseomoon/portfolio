@@ -40,8 +40,8 @@ const containerVariants: Variants = {
     visible: { transition: { staggerChildren: STAGGER_CHILDREN_S, delayChildren: HEADER_DELAY_S } },
 };
 const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 18 },
-    visible: { opacity: 1, y: 0, transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT } },
+    hidden: { opacity: 0, transform: 'translateY(18px)' },
+    visible: { opacity: 1, transform: 'translateY(0px)', transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT } },
 };
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
@@ -150,6 +150,7 @@ function ExperienceEntry({ experience }: { experience: IExperience }) {
                         href={experience.company_url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="exp-meta-link"
                         style={{
                             fontFamily: '"DM Serif Display", Georgia, serif',
                             fontSize: 'clamp(1rem, 2vw, 1.2rem)',
@@ -378,8 +379,8 @@ export default function Experience() {
                                     {experiences.map((exp, i) => (
                                         <motion.div
                                             key={exp.id}
-                                            initial={{ opacity: 0, y: REVEAL_Y_PX }}
-                                            whileInView={{ opacity: 1, y: 0, transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT, delay: i * ENTRY_STAGGER_S } }}
+                                            initial={{ opacity: 0, transform: `translateY(${REVEAL_Y_PX}px)` }}
+                                            whileInView={{ opacity: 1, transform: 'translateY(0px)', transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT, delay: i * ENTRY_STAGGER_S } }}
                                             viewport={{ once: true, margin: '-60px' }}
                                         >
                                             <ExperienceEntry experience={exp} />
