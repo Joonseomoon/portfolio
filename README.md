@@ -101,20 +101,18 @@ All data is managed through the [Supabase Table Editor](https://supabase.com/das
 | location     | text   | yes      |                                      |
 | description  | text[] | no       | Bullet points                        |
 | company_url  | text   | no       | Makes the company name a clickable link |
+| logo_url     | text   | no       | Company logo/icon image URL. If set, the Experience timeline shows it as a circular avatar; otherwise falls back to a plain dot |
 
 ### `portfolio_items`
 
-| Column        | Type    | Required | Notes                                                        |
-|---------------|---------|----------|---------------------------------------------------------------|
-| id            | uuid    | auto     | Primary key                                                   |
-| title         | text    | yes      |                                                                |
-| description   | text    | yes      |                                                                |
-| image_url     | text    | yes      | Project screenshot URL                                        |
-| icon_urls     | text[]  | no       | Tech stack icon URLs                                          |
-| featured      | boolean | yes      | Shows in carousel if true                                     |
-| featured_text | text    | no       | Overrides `description` in the featured carousel when set     |
-| project_url   | text    | no       | Live deployment URL — renders as a link button on the card    |
-| github_url    | text    | no       | GitHub repo URL — renders as a link button on the card        |
+| Column      | Type    | Required | Notes                          |
+|-------------|---------|----------|--------------------------------|
+| id          | uuid    | auto     | Primary key                    |
+| title       | text    | yes      |                                |
+| description | text    | yes      |                                |
+| image_url   | text    | yes      | Project screenshot URL         |
+| icon_urls   | text[]  | no       | Tech stack icon URLs           |
+| featured    | boolean | yes      | Shows in carousel if true      |
 
 ### `skills`
 
@@ -152,8 +150,9 @@ Warm monochrome editorial theme. Colors applied via inline styles — no CSS cus
 | muted   | `#78716C`                | Secondary text, nav links          |
 | label   | `#A8A29E`                | Eyebrows, captions, placeholders   |
 | border  | `rgba(28,25,23,0.09–0.2)`| Dividers, card borders             |
+| accent  | `#A8542E` (terracotta)   | Current-role highlight, hover states, links — used sparingly on the Experience page |
 
-**Typography:** DM Serif Display (italic headings) + DM Sans (body, UI)
+**Typography:** DM Serif Display (italic headings) + DM Sans (body, UI). Experience page role titles and company names are upright (non-italic) for readability.
 
 **Animations:** Framer Motion throughout. All timing values use named constants — no magic numbers. Hover transitions scoped to CSS classes in `index.css` (not inline styles) so they don't fire on mount.
 
@@ -190,6 +189,5 @@ Place your photo at `frontend/public/profile.jpg`. The About page displays it at
 
 ## Future Development Notes
 
-- **Experience company logos** — add a `logo_url` column to `experiences` and display logos on the timeline.
 - **Custom email domain** — verify a domain in Resend to send contact emails from a personal address instead of `onboarding@resend.dev`.
 - **Admin UI** — a protected `/admin` page backed by Supabase Auth for managing content without the Supabase dashboard.
