@@ -9,6 +9,7 @@ export interface IExperience {
     location: string;
     description: string[];
     company_url: string | null;
+    logo_url: string | null;
 }
 
 export interface IPortfolioItem {
