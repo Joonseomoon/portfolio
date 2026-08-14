@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { fetchSkills, type ISkill } from '../api';
 
 // ── Timing constants ──────────────────────────────────────────────────────────
-const STRONG_EASE_OUT    = [0.23, 1, 0.32, 1] as const;
-const WORD_STAGGER_S     = 0.055;
-const REVEAL_DURATION_S  = 0.6;
+const STRONG_EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const WORD_STAGGER_S = 0.055;
+const REVEAL_DURATION_S = 0.6;
 const STAGGER_CHILDREN_S = 0.07;
-const ITEM_DURATION_S    = 0.42;   // Emil: UI reveals ≤450ms
-const SKILL_STAGGER_S    = 0.03;
+const ITEM_DURATION_S = 0.42;   // Emil: UI reveals ≤450ms
+const SKILL_STAGGER_S = 0.03;
 
 // ── Hero entrance variants (mount-based, reliable for top-of-page) ────────────
 const containerVariants: Variants = {
@@ -19,7 +19,7 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-    hidden:  { opacity: 0, transform: 'translateY(16px)' },
+    hidden: { opacity: 0, transform: 'translateY(16px)' },
     visible: { opacity: 1, transform: 'translateY(0px)', transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT } },
 };
 
@@ -72,7 +72,7 @@ function VerticalCutReveal({ children, italic = false, delayBase = 0, controls }
 
 // ── Scroll-reveal wrapper (for below-fold sections) ───────────────────────────
 const fadeUpVariants: Variants = {
-    hidden:  { opacity: 0, transform: 'translateY(18px)' },
+    hidden: { opacity: 0, transform: 'translateY(18px)' },
     visible: (delay: number = 0) => ({
         opacity: 1,
         transform: 'translateY(0px)',
@@ -358,13 +358,14 @@ export default function About() {
                                     <p className="text-sm leading-[1.75] mb-3" style={{ color: '#57534E' }}>
                                         Hi, I'm{' '}
                                         <span style={{ color: '#1C1917', fontWeight: 600 }}>Joonseo Moon</span>
-                                        {' '}— a Computer Engineering student at Boston University, born in Korea and raised on O'ahu, Hawai'i. Growing up between those worlds shaped how I think about community, adaptability, and building things that genuinely matter to people.
+                                        {' '}— an undergraduate at Boston University, pursuing a Bachelor of Science in Computer Engineering with a Machine Learning Concentration. Born in South Korea and raised for most of my life on O'ahu, Hawai'i — where I learned that the best work comes from actually caring about the people you're building for.
                                     </p>
                                     <p className="text-sm leading-[1.75] mb-8" style={{ color: '#57534E' }}>
-                                        My work is driven by a passion for software that creates real impact. Through{' '}
+                                        My work is driven by a passion for software that improves people's lives. This past summer, as a{' '}
+                                        <span style={{ color: '#1C1917', fontWeight: 600 }}>Software Engineering Intern at DataHouse</span>
+                                        , I built AI-powered CRM tools that helped users get more done, faster. I'm continuing to grow through{' '}
                                         <span style={{ color: '#1C1917', fontWeight: 600 }}>Hack4Impact BU</span>
-                                        {' '}I help build technology for nonprofits, which has deepened my interest in full-stack development, AI/ML, and systems that are practical, accessible, and maintainable. I'm continuing to grow through personal projects and my upcoming role as a{' '}
-                                        <span style={{ color: '#1C1917', fontWeight: 600 }}>Software Engineering Intern at DataHouse</span>.
+                                        , where I help build technology for nonprofits — deepening my interest in full-stack development, AI/ML, and systems that are practical, accessible, and maintainable.
                                     </p>
 
                                     <motion.button
