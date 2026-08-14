@@ -1,43 +1,46 @@
-import { useEffect, useState } from 'react';
-import { motion, MotionConfig, type Variants } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, MotionConfig, useScroll, type Variants } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
 import { fetchExperiences, type IExperience } from '../api';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
-const META_W         = 180;
-const CONNECTOR_W    = 28;
-const DOT_SIZE_PX    = 8;
+const META_W = 180;
+const CONNECTOR_W = 66;
+const DOT_SIZE_PX = 52;
+const SMALL_DOT_PX = 12;
 const CARD_RADIUS_PX = 14;
-const LINE_LEFT_PX   = META_W + CONNECTOR_W / 2;
+const LINE_LEFT_PX = META_W + CONNECTOR_W / 2;
 
 // ── Animation constants ───────────────────────────────────────────────────────
-const STRONG_EASE_OUT    = [0.23, 1, 0.32, 1] as const;
-const ITEM_DURATION_S    = 0.45;
+const STRONG_EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const ITEM_DURATION_S = 0.45;
 const STAGGER_CHILDREN_S = 0.07;
-const HEADER_DELAY_S     = 0.05;
-const REVEAL_Y_PX        = 20;
-const ENTRY_STAGGER_S    = 0.04;
-const LINK_TRANSITION_S  = 0.18;
+const HEADER_DELAY_S = 0.05;
+const REVEAL_Y_PX = 20;
+const ENTRY_STAGGER_S = 0.04;
+const LINK_TRANSITION_S = 0.18;
 
 // ── Warm monochrome tokens ────────────────────────────────────────────────────
 const COLOR = {
-    bg:       '#F7F5F0',
-    text:     '#1C1917',
-    secondary:'#57534E',
-    muted:    '#78716C',
-    label:    '#A8A29E',
-    border:   'rgba(28,25,23,0.09)',
-    cardBg:   'rgba(28,25,23,0.025)',
-    dot:      'rgba(28,25,23,0.22)',
+    bg: '#F7F5F0',
+    text: '#1C1917',
+    secondary: '#57534E',
+    muted: '#78716C',
+    label: '#A8A29E',
+    border: 'rgba(28,25,23,0.09)',
+    cardBg: 'rgba(28,25,23,0.025)',
+    accent: '#A8542E',
+    accentSoft: 'rgba(168,84,46,0.1)',
+    accentBorder: 'rgba(168,84,46,0.32)',
 };
 
 // ── Entrance variants ─────────────────────────────────────────────────────────
 const containerVariants: Variants = {
-    hidden:  {},
+    hidden: {},
     visible: { transition: { staggerChildren: STAGGER_CHILDREN_S, delayChildren: HEADER_DELAY_S } },
 };
 const itemVariants: Variants = {
-    hidden:  { opacity: 0, y: 18 },
+    hidden: { opacity: 0, y: 18 },
     visible: { opacity: 1, y: 0, transition: { duration: ITEM_DURATION_S, ease: STRONG_EASE_OUT } },
 };
 
@@ -49,7 +52,7 @@ function SkeletonRow({ delay = 0 }: { delay?: number }) {
                 <div style={{ height: 9, width: '55%', background: 'rgba(28,25,23,0.06)', borderRadius: 3, animation: `pulse 1.5s ease-in-out ${delay}s infinite` }} />
                 <div style={{ height: 13, width: '80%', background: 'rgba(28,25,23,0.08)', borderRadius: 3, animation: `pulse 1.5s ease-in-out ${delay + 0.1}s infinite` }} />
             </div>
-            <div className="hidden md:flex" style={{ flexShrink: 0, width: CONNECTOR_W, flexDirection: 'column', alignItems: 'center', paddingTop: 24 }}>
+            <div className="hidden md:flex" style={{ flexShrink: 0, width: CONNECTOR_W, marginRight: 14, flexDirection: 'column', alignItems: 'center', paddingTop: 10 }}>
                 <div style={{ width: DOT_SIZE_PX, height: DOT_SIZE_PX, borderRadius: '50%', background: 'rgba(28,25,23,0.1)', border: '1px solid rgba(28,25,23,0.12)' }} />
             </div>
             <div style={{ flex: 1, background: COLOR.cardBg, border: `1px solid ${COLOR.border}`, borderRadius: CARD_RADIUS_PX, padding: '18px 22px' }}>
@@ -61,8 +64,69 @@ function SkeletonRow({ delay = 0 }: { delay?: number }) {
     );
 }
 
+// ── Current-role badge ────────────────────────────────────────────────────────
+function PresentBadge() {
+    return (
+        <span style={{
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+            fontSize: 8.5, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: COLOR.accent, background: COLOR.accentSoft,
+            border: `1px solid ${COLOR.accentBorder}`,
+            borderRadius: 999, padding: '2.5px 8px',
+            display: 'inline-block', flexShrink: 0,
+        }}>
+            Present
+        </span>
+    );
+}
+
+// ── Company logo avatar / plain connector dot ─────────────────────────────────
+function CompanyDot({ logoUrl, isCurrent }: { logoUrl: string | null; isCurrent: boolean }) {
+    const [imgFailed, setImgFailed] = useState(false);
+    const showLogo = !!logoUrl && !imgFailed;
+
+    if (!showLogo) {
+        return (
+            <div
+                className={isCurrent ? 'exp-dot-current' : undefined}
+                style={{
+                    width: SMALL_DOT_PX, height: SMALL_DOT_PX, borderRadius: '50%',
+                    background: isCurrent ? COLOR.accent : COLOR.text,
+                    border: `1.5px solid ${isCurrent ? COLOR.accent : COLOR.text}`,
+                    boxShadow: '0 1px 3px rgba(28,25,23,0.25)',
+                    flexShrink: 0,
+                }}
+            />
+        );
+    }
+
+    return (
+        <div
+            className={isCurrent ? 'exp-dot-current' : undefined}
+            style={{
+                position: 'relative', zIndex: 1, isolation: 'isolate',
+                width: DOT_SIZE_PX, height: DOT_SIZE_PX, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden',
+                background: '#FFFFFF',
+                border: `1.5px solid ${isCurrent ? COLOR.accent : '#8A8378'}`,
+                boxShadow: '0 2px 6px rgba(28,25,23,0.25)',
+                flexShrink: 0,
+            }}
+        >
+            <img
+                src={logoUrl!}
+                alt=""
+                onError={() => setImgFailed(true)}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 10 }}
+            />
+        </div>
+    );
+}
+
 // ── Individual experience entry ───────────────────────────────────────────────
 function ExperienceEntry({ experience }: { experience: IExperience }) {
+    const isCurrent = experience.timeframe.toLowerCase().includes('present');
     return (
         <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
             {/* Left meta — sticky, right-aligned */}
@@ -88,7 +152,7 @@ function ExperienceEntry({ experience }: { experience: IExperience }) {
                         rel="noopener noreferrer"
                         style={{
                             fontFamily: '"DM Serif Display", Georgia, serif',
-                            fontSize: '0.9rem', fontStyle: 'italic',
+                            fontSize: 'clamp(1rem, 2vw, 1.2rem)',
                             color: COLOR.text, textDecoration: 'none',
                             display: 'inline-flex', alignItems: 'center',
                             justifyContent: 'flex-end', gap: 4,
@@ -100,7 +164,7 @@ function ExperienceEntry({ experience }: { experience: IExperience }) {
                 ) : (
                     <p style={{
                         fontFamily: '"DM Serif Display", Georgia, serif',
-                        fontSize: '0.9rem', fontStyle: 'italic', color: COLOR.text,
+                        fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: COLOR.text,
                     }}>
                         {experience.company_name}
                     </p>
@@ -108,41 +172,50 @@ function ExperienceEntry({ experience }: { experience: IExperience }) {
             </div>
 
             {/* Connector dot */}
-            <div className="hidden md:flex" style={{ flexShrink: 0, width: CONNECTOR_W, flexDirection: 'column', alignItems: 'center', paddingTop: 26 }}>
-                <div style={{
-                    width: DOT_SIZE_PX, height: DOT_SIZE_PX, borderRadius: '50%',
-                    background: COLOR.dot,
-                    border: '1.5px solid rgba(28,25,23,0.2)',
-                }} />
+            <div
+                className="hidden md:flex"
+                style={{
+                    flexShrink: 0, width: CONNECTOR_W, marginRight: 14,
+                    flexDirection: 'column', alignItems: 'center',
+                    paddingTop: experience.logo_url ? 10 : 26,
+                    position: 'sticky', top: '4rem', alignSelf: 'flex-start',
+                }}
+            >
+                <CompanyDot logoUrl={experience.logo_url} isCurrent={isCurrent} />
             </div>
 
             {/* Content card */}
-            <article style={{
-                flex: 1, borderRadius: CARD_RADIUS_PX,
-                border: `1px solid ${COLOR.border}`,
-                background: COLOR.cardBg,
-                padding: '20px 24px',
-            }}>
+            <article
+                className="exp-card"
+                style={{
+                    flex: 1, borderRadius: CARD_RADIUS_PX,
+                    border: `1px solid ${isCurrent ? COLOR.accentBorder : COLOR.border}`,
+                    background: isCurrent ? COLOR.accentSoft : COLOR.cardBg,
+                    padding: '20px 24px',
+                }}
+            >
                 {/* Mobile meta */}
-                <div className="flex items-center gap-1.5 mb-2 md:hidden">
+                <div className="mb-2 md:hidden">
                     <span style={{ fontFamily: '"DM Sans"', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: COLOR.label }}>
                         {experience.timeframe}
                     </span>
-                    <span style={{ color: COLOR.label, fontSize: 9 }}>·</span>
-                    <span style={{ fontFamily: '"DM Serif Display"', fontSize: '0.85rem', fontStyle: 'italic', color: COLOR.muted }}>
+                    <p style={{ fontFamily: '"DM Serif Display"', fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: COLOR.muted, margin: 0 }}>
                         {experience.company_name}
-                    </span>
+                    </p>
                 </div>
 
                 {/* Role title */}
-                <h2 style={{
-                    fontFamily: '"DM Serif Display", Georgia, serif',
-                    fontSize: 'clamp(1rem, 2vw, 1.2rem)', fontWeight: 400,
-                    fontStyle: 'italic', lineHeight: 1.2, letterSpacing: '-0.012em',
-                    color: COLOR.text, marginBottom: 3,
-                }}>
-                    {experience.title}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 3 }}>
+                    <h2 style={{
+                        fontFamily: '"DM Serif Display", Georgia, serif',
+                        fontSize: 'clamp(1rem, 2vw, 1.2rem)', fontWeight: 400,
+                        lineHeight: 1.2, letterSpacing: '-0.012em',
+                        color: COLOR.text, margin: 0,
+                    }}>
+                        {experience.title}
+                    </h2>
+                    {isCurrent && <PresentBadge />}
+                </div>
 
                 {/* Location */}
                 {experience.location && (
@@ -182,7 +255,7 @@ function ExperienceEntry({ experience }: { experience: IExperience }) {
                             href={experience.company_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="exp-company-link"
+                            className="exp-company-link exp-company-link-accent"
                             style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 5,
                                 fontFamily: '"DM Sans", system-ui, sans-serif',
@@ -205,8 +278,13 @@ function ExperienceEntry({ experience }: { experience: IExperience }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Experience() {
     const [experiences, setExperiences] = useState<IExperience[]>([]);
-    const [loading, setLoading]         = useState(true);
-    const [error, setError]             = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const timelineRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: timelineRef,
+        offset: ['start 0.8', 'end 0.55'],
+    });
 
     useEffect(() => {
         fetchExperiences()
@@ -273,18 +351,30 @@ export default function Experience() {
                         )}
 
                         {!loading && !error && experiences.length > 0 && (
-                            <div style={{ position: 'relative' }}>
+                            <div ref={timelineRef} style={{ position: 'relative', zIndex: 0 }}>
                                 {/* Vertical connector line */}
                                 <div
                                     className="hidden md:block absolute pointer-events-none"
                                     style={{
-                                        left: LINE_LEFT_PX,
-                                        top: 26, bottom: 26, width: 1,
+                                        left: LINE_LEFT_PX - 1,
+                                        top: 26, bottom: 26, width: 2, zIndex: 0,
                                         background: 'linear-gradient(to bottom, transparent, rgba(28,25,23,0.1) 5%, rgba(28,25,23,0.1) 95%, transparent)',
                                     }}
                                 />
+                                {/* Accent fill line — tracks scroll progress through the timeline */}
+                                <motion.div
+                                    className="hidden md:block absolute pointer-events-none"
+                                    style={{
+                                        left: LINE_LEFT_PX - 1,
+                                        top: 26, bottom: 26, width: 2, zIndex: 0,
+                                        background: COLOR.accent,
+                                        opacity: 0.55,
+                                        transformOrigin: 'top',
+                                        scaleY: scrollYProgress,
+                                    }}
+                                />
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 28 }}>
                                     {experiences.map((exp, i) => (
                                         <motion.div
                                             key={exp.id}
