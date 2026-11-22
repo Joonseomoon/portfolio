@@ -18,7 +18,7 @@ const leftLinks: NavLink[] = [
 const rightLinks: NavLink[] = [
     { to: '/contact', label: 'Contact' },
 ];
-const RESUME_URL = 'https://afnodznejysfclenphzg.supabase.co/storage/v1/object/public/Resume/RESUME.pdf';
+const RESUME_URL = 'https://afnodznejysfclenphzg.supabase.co/storage/v1/object/public/Resume/Joonseo_Moon_Resume.pdf';
 
 export default function Navbar() {
     const { pathname } = useLocation();
